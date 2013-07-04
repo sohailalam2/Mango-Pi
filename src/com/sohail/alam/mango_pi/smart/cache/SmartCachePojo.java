@@ -35,13 +35,24 @@ package com.sohail.alam.mango_pi.smart.cache;
  */
 public class SmartCachePojo {
 
+    private final long TIME_STAMP;
     /**
-     * The Time Stamp when this Cache Data was created.
-     * This will be used while deleting the {@link SmartCache} entries, based on the expiry details.
+     * This represents the name of the Smart Cache. By default it takes the value of
+     * SMART_CACHE_(the time when the cache was created).
+     * You may override this value.
      */
-    public long TIME_STAMP;
+    public String SMART_CACHE_NAME;
 
     public SmartCachePojo() {
         TIME_STAMP = System.nanoTime();
+        SMART_CACHE_NAME = "SMART_CACHE_" + TIME_STAMP;
+    }
+
+    /**
+     * The Time Stamp when this Cache Data was created.
+     * This will be used while deleting the {@link com.sohail.alam.mango_pi.smart.cache.SmartCache} entries, based on the expiry details.
+     */
+    public long getTIME_STAMP() {
+        return TIME_STAMP;
     }
 }

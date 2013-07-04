@@ -78,7 +78,7 @@ public class DefaultSmartCache<K, V extends SmartCachePojo> extends AbstractSmar
                 @Override
                 public void run() {
                     for (K key : SMART_CACHE_DATA.keySet()) {
-                        if ((System.nanoTime() - SMART_CACHE_DATA.get(key).TIME_STAMP) >= expiry) {
+                        if ((System.nanoTime() - SMART_CACHE_DATA.get(key).getTIME_STAMP()) >= expiry) {
                             // Increment the deletedEntriesCounter
                             deletedEntriesCounter.incrementAndGet();
                             // Delete and Provide Callback if needed

@@ -102,6 +102,6 @@ public class TestSmartCache {
      * @param data The deleted entry from the Smart Cache
      */
     public void callback(SmartCachePojo data) {
-        logger.info("Deleted Data which was created at: " + data.TIME_STAMP);
+        logger.info("Deleted Data which was created at: " + data.getTIME_STAMP());
     }
 }
