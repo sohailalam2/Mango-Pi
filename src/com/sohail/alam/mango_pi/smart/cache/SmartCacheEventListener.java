@@ -14,21 +14,17 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-package com.sohail.alam.mango_pi.examples;
-
-import com.sohail.alam.mango_pi.examples.smart.cache.TestSmartCache;
+package com.sohail.alam.mango_pi.smart.cache;
 
 /**
  * User: Sohail Alam
  * Version: 1.0.0
- * Date: 9/6/13
- * Time: 10:54 AM
+ * Date: 4/7/13
+ * Time: 9:21 PM
  */
-public class TestMangoPiBootstrap {
+public interface SmartCacheEventListener<V extends SmartCachePojo> {
 
-    public static void main(String[] args) throws Exception {
+    public void onCreateCacheEntry(V createdEntry);
 
-        System.out.println("Starting Smart Cache Test");
-        new TestSmartCache();
-    }
+    public void onDeleteCacheEntry(V deletedEntry);
 }

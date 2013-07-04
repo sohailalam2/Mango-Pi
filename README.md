@@ -24,7 +24,7 @@ These are some of the things you will find in Mango Pi
 * ALGORITHMS
     * Round Robin - This will return an item from a List using Round Robin Algorithm
 
-* SMART CACHE - A very simple in-memory caching system with auto-deletion features
+* SMART T - A very simple in-memory caching system with auto-deletion features
 
 * VALIDATOR
     * IP Port - Validate IPv4, IPv6 and Port address. Extract IP, Port information from a String of IP:PORT pattern.

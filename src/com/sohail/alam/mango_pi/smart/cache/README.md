@@ -1,4 +1,4 @@
-# SMART CACHE
+# SMART T
 
 The SmartCache is an independent module of Mango Pi, which provides you a very simple and easy to use
 in-memory caching system. There are basically three components to this SmartCache module,

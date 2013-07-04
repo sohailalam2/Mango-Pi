@@ -21,7 +21,6 @@ import com.sohail.alam.mango_pi.smart.cache.DefaultSmartCache;
 import com.sohail.alam.mango_pi.smart.cache.SmartCachePojo;
 
 import java.lang.reflect.Method;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -40,13 +39,16 @@ public class TestSmartCache {
     /**
      * Constructor
      */
-    public TestSmartCache() {
+    public TestSmartCache() throws Exception {
 
         logger.info("Started with Test Smart Cache");
 
         // Instantiate the Smart Cache (Here we take advantage of the helper class DefaultSmartCache)
-        final DefaultSmartCache<String, SmartCacheData> mySmartCache =
-                new DefaultSmartCache<String, SmartCacheData>();
+        final DefaultSmartCache<String, SmartCacheData, MyCacheListener> mySmartCache =
+                new DefaultSmartCache<String, SmartCacheData, MyCacheListener>();
+
+        // Add an Event Listener to the Cache
+        mySmartCache.addSmartCacheEventsListener(new MyCacheListener());
 
         // The Callback method which will be invoked by the Smart Cache when deleting an entry from the Cache
         Method method = null;
@@ -60,13 +62,13 @@ public class TestSmartCache {
         mySmartCache.startAutoCleaner(200, 0, 500, TimeUnit.MILLISECONDS, this, method);
 
         // This is just for checking the number of entries in SmartCache and number of deleted entries
-        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-                logger.info("Total Elements Present in Cache   : " + mySmartCache.size());
-                logger.info("Total Elements Deleted from Cache : " + mySmartCache.getDeletedEntriesCounter());
-            }
-        }, 0, 1000, TimeUnit.MILLISECONDS);
+//        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(new Runnable() {
+//            @Override
+//            public void run() {
+//                logger.info("Total Elements Present in Cache   : " + mySmartCache.size());
+//                logger.info("Total Elements Deleted from Cache : " + mySmartCache.getDeletedEntriesCounter());
+//            }
+//        }, 0, 1000, TimeUnit.MILLISECONDS);
 
         // Finally put the data into the Smart Cache
         for (int i = 0; i < 1000; i++) {
@@ -102,6 +104,6 @@ public class TestSmartCache {
      * @param data The deleted entry from the Smart Cache
      */
     public void callback(SmartCachePojo data) {
-        logger.info("Deleted Data which was created at: " + data.getTIME_STAMP());
+//        logger.info("Deleted Data which was created at: " + data.getTIME_STAMP());
     }
 }

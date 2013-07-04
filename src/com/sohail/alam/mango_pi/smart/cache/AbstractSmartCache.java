@@ -52,15 +52,19 @@ import java.util.concurrent.ConcurrentMap;
  * Date: 9/6/13
  * Time: 1:14 AM
  */
-public abstract class AbstractSmartCache<K, V extends SmartCachePojo> implements SmartCache<K, V> {
+public abstract class AbstractSmartCache<K, V extends SmartCachePojo, E extends SmartCacheEventListener> implements SmartCache<K, V, E> {
 
-    final ConcurrentHashMap<K, V> SMART_CACHE_DATA;
+    private final ConcurrentHashMap<K, V> SMART_CACHE_DATA;
+    private SmartCacheEventListener smartCacheEventListener = null;
 
     /**
      * Instantiates a new {@link DefaultSmartCache}
      */
-    public AbstractSmartCache() {
+    public AbstractSmartCache(boolean activateMBean) throws Exception {
         SMART_CACHE_DATA = new ConcurrentHashMap<K, V>();
+        if (activateMBean) {
+            new SmartCacheMBean<AbstractSmartCache>(this).startService();
+        }
     }
 
     /**
@@ -106,6 +110,8 @@ public abstract class AbstractSmartCache<K, V extends SmartCachePojo> implements
     @Override
     public void put(K key, V data) throws NullPointerException {
         SMART_CACHE_DATA.put(key, data);
+        if (smartCacheEventListener != null)
+            smartCacheEventListener.onCreateCacheEntry(data);
     }
 
     /**
@@ -136,6 +142,8 @@ public abstract class AbstractSmartCache<K, V extends SmartCachePojo> implements
     public V remove(K key) throws NullPointerException {
         V data;
         if ((data = SMART_CACHE_DATA.remove(key)) != null) {
+            if (smartCacheEventListener != null)
+                smartCacheEventListener.onDeleteCacheEntry(data);
             return data;
         } else {
             return null;
@@ -215,5 +223,14 @@ public abstract class AbstractSmartCache<K, V extends SmartCachePojo> implements
     @Override
     public int size() {
         return SMART_CACHE_DATA.size();
+    }
+
+    public ConcurrentHashMap<K, V> getSMART_CACHE_DATA() {
+        return SMART_CACHE_DATA;
+    }
+
+    @Override
+    public void addSmartCacheEventsListener(E events) {
+        smartCacheEventListener = events;
     }
 }

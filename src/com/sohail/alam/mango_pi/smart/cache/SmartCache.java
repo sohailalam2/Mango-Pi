@@ -33,77 +33,84 @@ import java.util.concurrent.TimeUnit;
  * Date: 8/6/13
  * Time: 11:53 PM
  */
-public interface SmartCache<K, V> {
+public interface SmartCache<K, V, E extends SmartCacheEventListener> {
 
     /**
      * Checks whether the specified key is associated with any value in the {@link SmartCache}
      *
-     * @param key The Key of type {@link K}
+     * @param key The Key of type
      *
-     * @return {@code true} if present, otherwise {@code false}
+     * @return if present, otherwise
      */
     boolean containsKey(K key);
 
     /**
      * Checks whether the specified value is associated with any key in the {@link SmartCache}
      *
-     * @param value The Key of type {@link V}
+     * @param value The Key of type
      *
-     * @return {@code true} if present, otherwise {@code false}
+     * @return if present, otherwise
      */
     boolean containsValue(V value);
 
     /**
      * Checks whether the {@link SmartCache} is empty.
      *
-     * @return {@code true} if empty, otherwise {@code false}
+     * @return if empty, otherwise
      */
     boolean isEmpty();
 
     /**
      * Put the Data of type {@link V} into the {@link SmartCache}, corresponding to the Key of type {@link K}
      *
-     * @param key  Any Key of type {@link K}
-     * @param data Any Data of type {@link V}
+     * @param key  Any Key of type
+     * @param data Any Data of type
      */
     void put(K key, V data);
 
     /**
      * Get the Data corresponding to the given Key from the {@link SmartCache}
      *
-     * @param key The Key of type {@link K}
+     * @param key The Key of type
      *
-     * @return The Data of type {@link V}
+     * @return The Data of type
      */
     V get(K key);
 
     /**
      * Removes the Data corresponding to the given Key from the {@link SmartCache}
      *
-     * @param key The Key of type {@link K}
+     * @param key The Key of type
      *
-     * @return The Data of type {@link V} that was removed
+     * @return The Data of type
+     *         that was removed
      */
     V remove(K key);
 
     /**
      * Puts an entire Map into the {@link SmartCache}
      *
-     * @param dataMap Map of type {@link ConcurrentMap} having Key of type {@link K} and Data of type {@link V}
+     * @param dataMap Map of type
+     *                having Key of type
+     *                and Data of type
      */
     void putAll(ConcurrentMap<K, V> dataMap);
 
     /**
      * Gets an entire Map from the {@link SmartCache}
      *
-     * @return dataMap Map of type {@link ConcurrentMap} having Key of type {@link K} and Data of type {@link V}
+     * @return dataMap Map of type
+     *         having Key of type
+     *         and Data of type
      */
     ConcurrentMap<K, V> getAll();
 
     /**
      * Removes an entire Map from the {@link SmartCache} and returns it
      *
-     * @return dataMap Map of type {@link ConcurrentMap} having Key of type {@link K} and Data of type {@link V}
+     * @return dataMap Map of type
+     *         having Key of type
+     *         and Data of type
      */
     ConcurrentMap<K, V> removeAll();
 
@@ -145,17 +152,50 @@ public interface SmartCache<K, V> {
      * @param START_TASK_DELAY      The initial delay after which this Auto Cleaner service starts
      * @param REPEAT_TASK_DELAY     The delay after which this Auto Cleaner service repeats itself
      * @param TIME_UNIT             The Unit of time for the previous parameters
-     * @param CALLBACK_CLASS_OBJECT The Class Object which contains the callback method, if {@code null} then no callback is made
+     * @param CALLBACK_CLASS_OBJECT The Class Object which contains the callback method, if
+     *                              then no callback is made
      * @param CALLBACK_METHOD       The callback method, if null then no callback is provided.
-     *                              NOTE: The Callback method must accept only one parameter of type {@code V extends SmartCachePojo}
+     *                              NOTE: The Callback method must accept only one parameter of type
      *
-     * @return {@code true} if the Auto Cleaner Service was setup correctly, otherwise returns {@code false}
+     * @return if the Auto Cleaner Service was setup correctly, otherwise returns
      */
     boolean startAutoCleaner(final long EXPIRY_DURATION, final long START_TASK_DELAY, final long REPEAT_TASK_DELAY, final TimeUnit TIME_UNIT,
-                             final Object CALLBACK_CLASS_OBJECT, final Method CALLBACK_METHOD);
+                             final Object CALLBACK_CLASS_OBJECT, final Method CALLBACK_METHOD) throws SmartCacheException;
+
+    /**
+     * Sets up an Auto Cleaner Service which will delete entries from the {@link SmartCache} System on expiry of its TTL (time to live)
+     *
+     * @param EXPIRY_DURATION   The TTL value after which the entries will be deleted from the Smart Cache
+     * @param START_TASK_DELAY  The initial delay after which this Auto Cleaner service starts
+     * @param REPEAT_TASK_DELAY The delay after which this Auto Cleaner service repeats itself
+     * @param TIME_UNIT         The Unit of time for the previous parameters
+     *
+     * @return if the Auto Cleaner Service was setup correctly, otherwise returns
+     */
+    boolean startAutoCleaner(final long EXPIRY_DURATION, final long START_TASK_DELAY, final long REPEAT_TASK_DELAY, final TimeUnit TIME_UNIT) throws SmartCacheException;
+
+    /**
+     * Sets up an Auto Cleaner Service which will delete entries from the {@link SmartCache} System on expiry of its TTL (time to live)
+     *
+     * @param EXPIRY_DURATION         The TTL value after which the entries will be deleted from the Smart Cache
+     * @param START_TASK_DELAY        The initial delay after which this Auto Cleaner service starts
+     * @param REPEAT_TASK_DELAY       The delay after which this Auto Cleaner service repeats itself
+     * @param TIME_UNIT               The Unit of time for the previous parameters
+     * @param smartCacheEventListener the smart cache event listener
+     *
+     * @return if the Auto Cleaner Service was setup correctly, otherwise returns
+     */
+    boolean startAutoCleaner(final long EXPIRY_DURATION, final long START_TASK_DELAY, final long REPEAT_TASK_DELAY, final TimeUnit TIME_UNIT, final SmartCacheEventListener smartCacheEventListener) throws SmartCacheException;
 
     /**
      * Stops the ongoing Auto Cleaner Service
      */
     void stopAutoCleaner();
+
+    /**
+     * Add smart cache events listener.
+     *
+     * @param smartCacheEventListener the smart cache event listener
+     */
+    void addSmartCacheEventsListener(E smartCacheEventListener);
 }

@@ -16,6 +16,7 @@
 
 package com.sohail.alam.mango_pi.smart.cache;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -40,17 +41,25 @@ import java.util.concurrent.atomic.AtomicLong;
  * Date: 9/6/13
  * Time: 12:27 AM
  */
-public class DefaultSmartCache<K, V extends SmartCachePojo> extends AbstractSmartCache<K, V> {
+public class DefaultSmartCache<K, V extends SmartCachePojo, E extends SmartCacheEventListener> extends AbstractSmartCache<K, V, E> {
 
     private Executors autoCleanerExecutor;
     private ScheduledExecutorService autoCleanerService = null;
     private AtomicLong deletedEntriesCounter = new AtomicLong(0);
+    private SmartCacheEventListener smartCacheEventListener = null;
 
     /**
      * Instantiates a new {@link DefaultSmartCache}
      */
-    public DefaultSmartCache() {
-        super();
+    public DefaultSmartCache() throws Exception {
+        super(false);
+        new SmartCacheMBean<DefaultSmartCache>(this).startService();
+    }
+
+    @Override
+    public void addSmartCacheEventsListener(E events) {
+        super.addSmartCacheEventsListener(events);
+        smartCacheEventListener = events;
     }
 
     /**
@@ -68,28 +77,79 @@ public class DefaultSmartCache<K, V extends SmartCachePojo> extends AbstractSmar
      */
     @Override
     public boolean startAutoCleaner(long EXPIRY_DURATION, long START_TASK_DELAY, long REPEAT_TASK_DELAY, TimeUnit TIME_UNIT,
-                                    final Object CALLBACK_CLASS_OBJECT, final Method CALLBACK_METHOD) {
+                                    final Object CALLBACK_CLASS_OBJECT, final Method CALLBACK_METHOD) throws SmartCacheException {
 
         final long expiry = TimeUnit.NANOSECONDS.convert(EXPIRY_DURATION, TIME_UNIT);
 
-        autoCleanerService = autoCleanerExecutor.newSingleThreadScheduledExecutor();
+        if (autoCleanerService == null) {
+            autoCleanerService = autoCleanerExecutor.newSingleThreadScheduledExecutor();
+        } else {
+            throw new SmartCacheException("Auto Cleaner for this Cache has already been started!");
+        }
+
+        final SmartCacheException[] anyException = new SmartCacheException[1];
+
+        autoCleanerService.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                for (K key : keySet()) {
+                    if ((System.nanoTime() - get(key).getTIME_STAMP()) >= expiry) {
+                        // Increment the deletedEntriesCounter
+                        deletedEntriesCounter.incrementAndGet();
+                        // Delete and Provide Callback if needed
+                        if (CALLBACK_CLASS_OBJECT != null && CALLBACK_METHOD != null) {
+                            try {
+                                CALLBACK_METHOD.invoke(CALLBACK_CLASS_OBJECT, remove(key));
+                            } catch (IllegalAccessException e) {
+                                anyException[0] = new SmartCacheException("IllegalAccessException: " + e.getMessage());
+                                break;
+                            } catch (InvocationTargetException e) {
+                                anyException[0] = new SmartCacheException("InvocationTargetException: " + e.getMessage());
+                                break;
+                            }
+                        } else {
+                            remove(key);
+                        }
+                    }
+                }
+            }
+        }, START_TASK_DELAY, REPEAT_TASK_DELAY, TIME_UNIT);
+
+        if (anyException[0] != null) {
+            throw anyException[0];
+        }
+        return true;
+    }
+
+    @Override
+    public boolean startAutoCleaner(long EXPIRY_DURATION, long START_TASK_DELAY, long REPEAT_TASK_DELAY, TimeUnit TIME_UNIT, final SmartCacheEventListener smartCacheEventListener) throws SmartCacheException {
+
+        this.smartCacheEventListener = smartCacheEventListener;
+        return startAutoCleaner(EXPIRY_DURATION, START_TASK_DELAY, REPEAT_TASK_DELAY, TIME_UNIT);
+    }
+
+    @Override
+    public boolean startAutoCleaner(long EXPIRY_DURATION, long START_TASK_DELAY, long REPEAT_TASK_DELAY, TimeUnit TIME_UNIT) throws SmartCacheException {
+        final long expiry = TimeUnit.NANOSECONDS.convert(EXPIRY_DURATION, TIME_UNIT);
+
+        if (autoCleanerService == null) {
+            autoCleanerService = autoCleanerExecutor.newSingleThreadScheduledExecutor();
+        } else {
+            throw new SmartCacheException("Auto Cleaner for this Cache has already been started!");
+        }
         try {
             autoCleanerService.scheduleAtFixedRate(new Runnable() {
                 @Override
                 public void run() {
-                    for (K key : SMART_CACHE_DATA.keySet()) {
-                        if ((System.nanoTime() - SMART_CACHE_DATA.get(key).getTIME_STAMP()) >= expiry) {
+                    for (K key : keySet()) {
+                        if ((System.nanoTime() - get(key).getTIME_STAMP()) >= expiry) {
                             // Increment the deletedEntriesCounter
                             deletedEntriesCounter.incrementAndGet();
                             // Delete and Provide Callback if needed
-                            if (CALLBACK_CLASS_OBJECT != null && CALLBACK_METHOD != null) {
-                                try {
-                                    CALLBACK_METHOD.invoke(CALLBACK_CLASS_OBJECT, SMART_CACHE_DATA.remove(key));
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
+                            if (smartCacheEventListener != null) {
+                                smartCacheEventListener.onDeleteCacheEntry(remove(key));
                             } else {
-                                SMART_CACHE_DATA.remove(key);
+                                remove(key);
                             }
                         }
                     }
@@ -108,6 +168,7 @@ public class DefaultSmartCache<K, V extends SmartCachePojo> extends AbstractSmar
     public void stopAutoCleaner() throws SecurityException {
         if (autoCleanerService != null)
             autoCleanerService.shutdown();
+        autoCleanerService = null;
     }
 
     /**

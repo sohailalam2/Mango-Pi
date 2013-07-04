@@ -35,17 +35,16 @@ import java.util.concurrent.TimeUnit;
 public class SmartCacheMBean<T extends SmartCache> {
 
     private static final String MBEAN_NAME = "MangoPI:Module=SmartCache-" + System.nanoTime();
-    private SmartCache smartCache;
-    private DefaultSmartCache defaultSmartCache;
+    private SmartCache cache;
 
     public SmartCacheMBean(T cache) {
         if (cache == null)
             throw new NullPointerException("The Instance of the Cache can not be null");
 
-        this.smartCache = cache;
-        if (cache instanceof DefaultSmartCache) {
-            defaultSmartCache = (DefaultSmartCache) cache;
-        }
+        if (cache instanceof DefaultSmartCache)
+            this.cache = (DefaultSmartCache) cache;
+        else
+            this.cache = cache;
     }
 
     private SmartCacheMBean() {
@@ -67,11 +66,11 @@ public class SmartCacheMBean<T extends SmartCache> {
     }
 
     /* ************************************************************************************
-     *                              SMART smartCache ATTRIBUTES                                *
+     *                              SMART cache ATTRIBUTES                                *
      * ************************************************************************************/
 
      /* ************************************************************************************
-     *                               SMART smartCache OPERATIONS                                *
+     *                               SMART cache OPERATIONS                                *
      * ************************************************************************************/
 
     @JMXBeanOperation(name = "startAutoCleaner", description = "Start the auto cleaner service for the given Smart Cache")
@@ -82,21 +81,34 @@ public class SmartCacheMBean<T extends SmartCache> {
                                     @JMXBeanParameter(name = "Callback Class Object", description = "An object of the Callback Class (can be null)") final Object CALLBACK_CLASS_OBJECT,
                                     @JMXBeanParameter(name = "Callback Method", description = "The Callback Method (can be null)") final Method CALLBACK_METHOD) {
 
-        return this.smartCache.startAutoCleaner(EXPIRY_DURATION, START_TASK_DELAY, REPEAT_TASK_DELAY, TIME_UNIT, CALLBACK_CLASS_OBJECT, CALLBACK_METHOD);
+        try {
+            return this.cache.startAutoCleaner(EXPIRY_DURATION, START_TASK_DELAY, REPEAT_TASK_DELAY, TIME_UNIT, CALLBACK_CLASS_OBJECT, CALLBACK_METHOD);
+        } catch (SmartCacheException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     @JMXBeanOperation(name = "stopAutoCleaner", description = "Stop the auto cleaner service for the given Smart Cache")
     public void stopAutoCleaner() {
-        this.smartCache.stopAutoCleaner();
+        this.cache.stopAutoCleaner();
     }
 
     @JMXBeanOperation(name = "getDeletedEntriesCounter", description = "Gets the total number of entries deleted for this Smart Cache (available only if the cache is created using DefaultSmartCache)")
-    public long getDeletedEntriesCounter() {
-        return defaultSmartCache.getDeletedEntriesCounter();
+    public long getDeletedEntriesCounter() throws SmartCacheException {
+        if (cache instanceof DefaultSmartCache) {
+            return ((DefaultSmartCache) cache).getDeletedEntriesCounter();
+        } else {
+            throw new SmartCacheException("Given Cache is not an instance of DefaultSmartCache");
+        }
     }
 
     @JMXBeanOperation(name = "resetDeletedEntriesCounter", description = "Resets the total number of entries deleted for this Smart Cache to zero (available only if the cache is created using DefaultSmartCache)")
-    public void resetDeletedEntriesCounter() {
-        defaultSmartCache.resetDeletedEntriesCounter();
+    public void resetDeletedEntriesCounter() throws SmartCacheException {
+        if (cache instanceof DefaultSmartCache) {
+            ((DefaultSmartCache) cache).resetDeletedEntriesCounter();
+        } else {
+            throw new SmartCacheException("Given Cache is not an instance of DefaultSmartCache");
+        }
     }
 }
