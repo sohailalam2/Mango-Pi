@@ -16,13 +16,27 @@
   -->
 
 <project default="create_run_jar" name="Create Jars for the Mango-Pi Project" basedir=".">
+    <!-- IMPORT THE ANT BUILD PROJECTS -->
+    <import file="ant_builds/build-algorithm-jar.xml"/>
+    <import file="ant_builds/build-jmx-wrapper-jar.xml"/>
+    <import file="ant_builds/build-smartcache-jar"/>
+    <import file="ant_builds/build-utils-jar.xml"/>
+    <import file="ant_builds/build-validator-jar.xml"/>
+
     <!--ANT 1.7 is required -->
     <target name="init">
         <deltree dir="${basedir}/dist/Mango_Pi"/>
-        <mkdir dir="${basedir}/dist/Mango_Pi/javadoc"/>
+        <mkdir dir="${basedir}/dist/Mango_Pi/javadoc/Mango_Pi"/>
+        <mkdir dir="${basedir}/javadoc/Mango_Pi"/>
+        <mkdir dir="${basedir}/javadoc/Algorithms"/>
+        <mkdir dir="${basedir}/javadoc/JMX_Wrapper"/>
+        <mkdir dir="${basedir}/javadoc/SmartCache"/>
+        <mkdir dir="${basedir}/javadoc/Utils"/>
+        <mkdir dir="${basedir}/javadoc/Validator"/>
     </target>
 
-    <target name="create-javadoc" depends="init">
+    <!-- CREATE THE JAVADOC FOR THE MANGO-PI PROJECT -->
+    <target name="create-mango-pi-javadoc">
         <javadoc destdir="${basedir}/javadoc/Mango_Pi" author="true" version="true"
                  use="true" windowtitle="Mango-Pi Javadoc">
             <packageset dir="src" defaultexcludes="yes">
@@ -39,134 +53,11 @@
                   packagelistLoc="${basedir}/dist/Mango_Pi/javadoc/Mango_Pi/tmp"/>
             <link href="https://github.com/sohailalam2/Mango-Pi/"/>
         </javadoc>
-
-        <javadoc destdir="${basedir}/javadoc/Algorithms" author="true" version="true"
-                 use="true" windowtitle="Mango-Pi: Algorithms Javadoc">
-            <packageset dir="src" defaultexcludes="yes">
-                <include name="com/sohail/alam/mango_pi/algorithms/**"/>
-            </packageset>
-            <doctitle><![CDATA[<h1>Project Mango-Pi: Algorithms</h1>]]></doctitle>
-            <bottom><![CDATA[<i>Copyright &#169; 2013 Mango-Pi Corp. All Rights Reserved.</i>]]></bottom>
-            <tag name="Mango-Pi-Algorithms" scope="all" description="Mango-Pi Sub-Projects:"/>
-            <group title="Algorithms" packages="com.sohail.alam.mango_pi.algorithms*"/>
-            <link offline="true" href="https://github.com/sohailalam2/Mango-Pi/"
-                  packagelistLoc="${basedir}/dist/Mango_Pi/javadoc/tmp"/>
-            <link href="https://github.com/sohailalam2/Mango-Pi/"/>
-        </javadoc>
-
-        <javadoc destdir="${basedir}/javadoc/JMX_Wrapper" author="true" version="true"
-                 use="true" windowtitle="Mango-Pi: JMX Wrapper Javadoc">
-            <packageset dir="src" defaultexcludes="yes">
-                <include name="com/sohail/alam/mango_pi/jmx/wrapper/**"/>
-            </packageset>
-            <doctitle><![CDATA[<h1>Project Mango-Pi: JMX Wrapper</h1>]]></doctitle>
-            <bottom><![CDATA[<i>Copyright &#169; 2013 Mango-Pi Corp. All Rights Reserved.</i>]]></bottom>
-            <tag name="Mango-Pi-JMX-Wrapper" scope="all" description="Mango-Pi Sub-Projects:"/>
-            <group title="JMX Wrapper" packages="com.sohail.alam.mango_pi.jmx.wrapper*"/>
-            <link offline="true" href="https://github.com/sohailalam2/Mango-Pi/"
-                  packagelistLoc="${basedir}/dist/Mango_Pi/javadoc/tmp"/>
-            <link href="https://github.com/sohailalam2/Mango-Pi/"/>
-        </javadoc>
-
-        <javadoc destdir="${basedir}/javadoc/SmartCache" author="true" version="true"
-                 use="true" windowtitle="Mango-Pi: Smart Cache Javadoc">
-            <packageset dir="src" defaultexcludes="yes">
-                <include name="com/sohail/alam/mango_pi/smart/cache/**"/>
-            </packageset>
-            <doctitle><![CDATA[<h1>Project Mango-Pi: Smart Cache</h1>]]></doctitle>
-            <bottom><![CDATA[<i>Copyright &#169; 2013 Mango-Pi Corp. All Rights Reserved.</i>]]></bottom>
-            <tag name="Mango-Pi-Smart-Cache" scope="all" description="Mango-Pi Sub-Projects:"/>
-            <group title="Smart Cache" packages="com.sohail.alam.mango_pi.smart.cache*"/>
-            <link offline="true" href="https://github.com/sohailalam2/Mango-Pi/"
-                  packagelistLoc="${basedir}/dist/Mango_Pi/javadoc/tmp"/>
-            <link href="https://github.com/sohailalam2/Mango-Pi/"/>
-        </javadoc>
-
-        <javadoc destdir="${basedir}/javadoc/Utils" author="true" version="true"
-                 use="true" windowtitle="Mango-Pi: Utils Javadoc">
-            <packageset dir="src" defaultexcludes="yes">
-                <include name="com/sohail/alam/mango_pi/utils/**"/>
-            </packageset>
-            <doctitle><![CDATA[<h1>Project Mango-Pi: Utils</h1>]]></doctitle>
-            <bottom><![CDATA[<i>Copyright &#169; 2013 Mango-Pi Corp. All Rights Reserved.</i>]]></bottom>
-            <tag name="Mango-Pi-Utils" scope="all" description="Mango-Pi Sub-Projects:"/>
-            <group title="Utils" packages="com.sohail.alam.mango_pi.utils*"/>
-            <link offline="true" href="https://github.com/sohailalam2/Mango-Pi/"
-                  packagelistLoc="${basedir}/dist/Mango_Pi/javadoc/tmp"/>
-            <link href="https://github.com/sohailalam2/Mango-Pi/"/>
-        </javadoc>
-
-        <javadoc destdir="${basedir}/javadoc/Validator" author="true" version="true"
-                 use="true" windowtitle="Mango-Pi: Validator Javadoc">
-            <packageset dir="src" defaultexcludes="yes">
-                <include name="com/sohail/alam/mango_pi/validator/**"/>
-            </packageset>
-            <doctitle><![CDATA[<h1>Project Mango-Pi: Validator</h1>]]></doctitle>
-            <bottom><![CDATA[<i>Copyright &#169; 2013 Mango-Pi Corp. All Rights Reserved.</i>]]></bottom>
-            <tag name="Mango-Pi-Validator" scope="all" description="Mango-Pi Sub-Projects:"/>
-            <group title="Validator" packages="com.sohail.alam.mango_pi.validator.*"/>
-            <link offline="true" href="https://github.com/sohailalam2/Mango-Pi/"
-                  packagelistLoc="${basedir}/dist/Mango_Pi/javadoc/tmp"/>
-            <link href="https://github.com/sohailalam2/Mango-Pi/"/>
-        </javadoc>
-    </target>
-
-    <!-- CREATE SmartCache Jar -->
-    <target name="create-SmartCache-jar">
-        <mkdir dir="${basedir}/dist/Mango_Pi/SmartCache"/>
-        <copydir src="${basedir}/javadoc/SmartCache" dest="${basedir}/dist/Mango_Pi/SmartCache/javadoc"/>
-        <jar destfile="${basedir}/dist/Mango_Pi/SmartCache/SmartCacheJavadoc.jar" filesetmanifest="mergewithoutmain">
-            <manifest>
-                <attribute name="Built-By" value="${user.name}"/>
-                <attribute name="Main-Class" value=""/>
-                <attribute name="Class-Path" value="."/>
-            </manifest>
-            <fileset dir="${basedir}/javadoc/SmartCache"/>
-        </jar>
-        <jar destfile="${basedir}/dist/Mango_Pi/SmartCache/SmartCache.jar" filesetmanifest="mergewithoutmain">
-            <manifest>
-                <attribute name="Built-By" value="${user.name}"/>
-                <attribute name="Main-Class" value=""/>
-                <attribute name="Class-Path" value="."/>
-            </manifest>
-            <fileset dir="${basedir}/out/production/Mango_Pi">
-                <include name='com/sohail/alam/mango_pi/smart/cache/**.*'/>
-                <include name='com/sohail/alam/mango_pi/jmx/wrapper/**.*'/>
-                <include name='com/sohail/alam/mango_pi/utils/MBeanService.java'/>
-                <exclude name='com/sohail/alam/mango_pi/**.*'/>
-            </fileset>
-        </jar>
-    </target>
-
-    <!-- CREATE Validator Jar -->
-    <target name="create-Validator-jar">
-        <mkdir dir="${basedir}/dist/Mango_Pi/Validator"/>
-        <copydir src="${basedir}/javadoc/Validator" dest="${basedir}/dist/Mango_Pi/Validator/javadoc"/>
-        <jar destfile="${basedir}/dist/Mango_Pi/Validator/ValidatorJavadoc.jar" filesetmanifest="mergewithoutmain">
-            <manifest>
-                <attribute name="Built-By" value="${user.name}"/>
-                <attribute name="Main-Class" value=""/>
-                <attribute name="Class-Path" value="."/>
-            </manifest>
-            <fileset dir="${basedir}/javadoc/Validator"/>
-        </jar>
-        <jar destfile="${basedir}/dist/Mango_Pi/Validator/Validator.jar" filesetmanifest="mergewithoutmain">
-            <manifest>
-                <attribute name="Built-By" value="${user.name}"/>
-                <attribute name="Main-Class" value=""/>
-                <attribute name="Class-Path" value="."/>
-            </manifest>
-            <fileset dir="${basedir}/out/production/Mango_Pi">
-                <include name='com/sohail/alam/mango_pi/validator/**.*'/>
-                <include name='com/sohail/alam/mango_pi/validator/ipport/**.*'/>
-                <exclude name='com/sohail/alam/mango_pi/**.*'/>
-                <exclude name='com/sohail/alam/mango_pi/smart/cache/**.*'/>
-            </fileset>
-        </jar>
     </target>
 
     <!-- CREATE THE APPLICATION JAR -->
-    <target name="create_run_jar" depends="create-javadoc, create-SmartCache-jar, create-Validator-jar">
+    <target name="create_run_jar" depends="init, create-mango-pi-javadoc, create-Algorithms-jar,
+    create-JMX-Wrapper-jar, create-SmartCache-jar, create-Utils-jar, create-Validator-jar">
         <jar destfile="${basedir}/dist/Mango_Pi/Mango_Pi.jar" filesetmanifest="mergewithoutmain">
             <manifest>
                 <attribute name="Built-By" value="${user.name}"/>

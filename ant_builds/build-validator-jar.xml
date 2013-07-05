@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+  ~ Copyright 2013 The Mango Pi Project
+  ~
+  ~ The Mango Pi Project licenses this file to you under the Apache License, version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at:
+  ~
+  ~              http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the License is distributed on an
+  ~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+  ~ either express or implied.
+  ~ See the License for the specific language governing permissions and limitations under the License.
+  -->
+
+<project default="create-Validator-jar" name="Create Jars for the Mango-Pi Project" basedir="..">
+    <target name="create-Validator-javadoc">
+        <javadoc destdir="${basedir}/javadoc/Validator" author="true" version="true"
+                 use="true" windowtitle="Mango-Pi: Validator Javadoc">
+            <packageset dir="${basedir}/src" defaultexcludes="yes">
+                <include name="com/sohail/alam/mango_pi/validator/**"/>
+            </packageset>
+            <doctitle><![CDATA[<h1>Project Mango-Pi: Validator</h1>]]></doctitle>
+            <bottom><![CDATA[<i>Copyright &#169; 2013 Mango-Pi Corp. All Rights Reserved.</i>]]></bottom>
+            <tag name="Mango-Pi-Validator" scope="all" description="Mango-Pi Sub-Projects:"/>
+            <group title="Validator" packages="com.sohail.alam.mango_pi.validator.*"/>
+            <link offline="true" href="https://github.com/sohailalam2/Mango-Pi/"
+                  packagelistLoc="${basedir}/dist/Mango_Pi/javadoc/tmp"/>
+            <link href="https://github.com/sohailalam2/Mango-Pi/"/>
+        </javadoc>
+    </target>
+    <!-- CREATE Validator Jar -->
+    <target name="create-Validator-jar" depends="create-Validator-javadoc">
+        <mkdir dir="${basedir}/dist/Mango_Pi/Validator"/>
+        <copydir src="${basedir}/javadoc/Validator" dest="${basedir}/dist/Mango_Pi/Validator/javadoc"/>
+        <jar destfile="${basedir}/dist/Mango_Pi/Validator/ValidatorJavadoc.jar" filesetmanifest="mergewithoutmain">
+            <manifest>
+                <attribute name="Built-By" value="${user.name}"/>
+                <attribute name="Main-Class" value=""/>
+                <attribute name="Class-Path" value="."/>
+            </manifest>
+            <fileset dir="${basedir}/javadoc/Validator"/>
+        </jar>
+        <jar destfile="${basedir}/dist/Mango_Pi/Validator/Validator.jar" filesetmanifest="mergewithoutmain">
+            <manifest>
+                <attribute name="Built-By" value="${user.name}"/>
+                <attribute name="Main-Class" value=""/>
+                <attribute name="Class-Path" value="."/>
+            </manifest>
+            <fileset dir="${basedir}/out/production/Mango_Pi">
+                <include name='com/sohail/alam/mango_pi/validator/**.*'/>
+                <include name='com/sohail/alam/mango_pi/validator/ipport/**.*'/>
+                <exclude name='com/sohail/alam/mango_pi/**.*'/>
+                <exclude name='com/sohail/alam/mango_pi/smart/cache/**.*'/>
+            </fileset>
+        </jar>
+    </target>
+</project>
