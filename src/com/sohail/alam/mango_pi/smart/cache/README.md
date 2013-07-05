@@ -27,6 +27,14 @@ This helper class will clear the cache for you in background thread, according t
 
 It is an ongoing project. Please feel free to contribute to this Project.
 
+## Dependencies
+
+Smart Cache depends upon the following sub-packages of Mango-Pi.
+
+* JMX Wrapper (by Udo Klimaschewski)
+
+* Utils -> MBeanService.java
+
 ## How to use
 
 * Lets Define a custom data structure that we need to save in SmartCache (See the example)

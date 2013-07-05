@@ -17,6 +17,13 @@
 package com.sohail.alam.mango_pi.smart.cache;
 
 /**
+ * This {@link SmartCacheEventListener} interface exposes the events that the SmartCache system
+ * is able to fire when certain conditions are met.
+ * <p/>
+ * You should implement this {@link SmartCacheEventListener} interface and add the listener class
+ * to your Cache instance, if you want to be notified when something happens, like data is deleted
+ * from the Cache.
+ * <p/>
  * User: Sohail Alam
  * Version: 1.0.0
  * Date: 4/7/13
@@ -24,7 +31,21 @@ package com.sohail.alam.mango_pi.smart.cache;
  */
 public interface SmartCacheEventListener<V extends SmartCachePojo> {
 
+    /**
+     * Event for On create cache entry.
+     * Whenever an element is inserted into the SmartCache, this event gets fired,
+     * with the latest entry that was inserted into that cache.
+     *
+     * @param createdEntry the entry which was inserted into the Cache
+     */
     public void onCreateCacheEntry(V createdEntry);
 
+    /**
+     * Event for On delete cache entry.
+     * Whenever an element is deleted from the SmartCache, this event gets fired,
+     * with the deleted entry being passed as the method parameter.
+     *
+     * @param deletedEntry the entry which was deleted from the Cache
+     */
     public void onDeleteCacheEntry(V deletedEntry);
 }

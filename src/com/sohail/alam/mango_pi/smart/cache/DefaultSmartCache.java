@@ -26,9 +26,12 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * <p>
  * this concrete class {@link DefaultSmartCache} extends {@link AbstractSmartCache} and
- * implements the {@link SmartCache#startAutoCleaner(long, long, long, java.util.concurrent.TimeUnit, Object, java.lang.reflect.Method)}
- * method, which checks the TTL value for each elements stored in the {@link SmartCache} and removes it
- * when expired.
+ * implements the {@link SmartCache#startAutoCleaner(long, long, long, java.util.concurrent.TimeUnit)},
+ * {@link SmartCache#startAutoCleaner(long, long, long, java.util.concurrent.TimeUnit, Object, java.lang.reflect.Method)},
+ * {@link SmartCache#startAutoCleaner(long, long, long, java.util.concurrent.TimeUnit, SmartCacheEventListener)}
+ * methods, which checks the TTL value for each elements stored in the {@link SmartCache} and removes it
+ * when expired. Also, {@link com.sohail.alam.mango_pi.smart.cache.SmartCache#stopAutoCleaner()} method is
+ * provided for you to cancel the Auto Cleaner Service when not needed.
  * </p>
  * <p>
  * But in order for this to work, your Data Structure must implement the {@link SmartCachePojo}, which
@@ -51,7 +54,7 @@ public class DefaultSmartCache<K, V extends SmartCachePojo, E extends SmartCache
     /**
      * Instantiates a new {@link DefaultSmartCache}
      */
-    public DefaultSmartCache() throws Exception {
+    public DefaultSmartCache() throws SmartCacheException {
         super(false);
         new SmartCacheMBean<DefaultSmartCache>(this).startService();
     }
@@ -101,10 +104,10 @@ public class DefaultSmartCache<K, V extends SmartCachePojo, E extends SmartCache
                             try {
                                 CALLBACK_METHOD.invoke(CALLBACK_CLASS_OBJECT, remove(key));
                             } catch (IllegalAccessException e) {
-                                anyException[0] = new SmartCacheException("IllegalAccessException: " + e.getMessage());
+                                anyException[0] = new SmartCacheException("IllegalAccessException: " + e.getMessage(), e);
                                 break;
                             } catch (InvocationTargetException e) {
-                                anyException[0] = new SmartCacheException("InvocationTargetException: " + e.getMessage());
+                                anyException[0] = new SmartCacheException("InvocationTargetException: " + e.getMessage(), e);
                                 break;
                             }
                         } else {
@@ -124,7 +127,7 @@ public class DefaultSmartCache<K, V extends SmartCachePojo, E extends SmartCache
     @Override
     public boolean startAutoCleaner(long EXPIRY_DURATION, long START_TASK_DELAY, long REPEAT_TASK_DELAY, TimeUnit TIME_UNIT, final SmartCacheEventListener smartCacheEventListener) throws SmartCacheException {
 
-        this.smartCacheEventListener = smartCacheEventListener;
+        this.addSmartCacheEventsListener((E) smartCacheEventListener);
         return startAutoCleaner(EXPIRY_DURATION, START_TASK_DELAY, REPEAT_TASK_DELAY, TIME_UNIT);
     }
 
@@ -146,18 +149,14 @@ public class DefaultSmartCache<K, V extends SmartCachePojo, E extends SmartCache
                             // Increment the deletedEntriesCounter
                             deletedEntriesCounter.incrementAndGet();
                             // Delete and Provide Callback if needed
-                            if (smartCacheEventListener != null) {
-                                smartCacheEventListener.onDeleteCacheEntry(remove(key));
-                            } else {
-                                remove(key);
-                            }
+                            remove(key);
                         }
                     }
                 }
             }, START_TASK_DELAY, REPEAT_TASK_DELAY, TIME_UNIT);
             return true;
         } catch (Exception e) {
-            return false;
+            throw new SmartCacheException("Smart Cache can not start the auto cleaner service due to: " + e.getMessage(), e);
         }
     }
 

@@ -30,13 +30,17 @@ import java.util.concurrent.TimeUnit;
  * {@link java.util.concurrent} package. The difference in what {@link SmartCache} and {@link ConcurrentMap}
  * does is that, {@link SmartCache} goes a little further and provide you with a
  * solution to automatically delete entries from the {@link ConcurrentMap} Data Structure when the
- * Time To Live (TTL) for that entry expires.
+ * Time To Live (TTL) for that entry expires, and fire events when something happens, like when
+ * entries are deleted from the Cache.
  * </p>
  * <p>
  * Any concrete class, such as {@link DefaultSmartCache} that extends {@link AbstractSmartCache}
- * implements the {@link SmartCache#startAutoCleaner(long, long, long, java.util.concurrent.TimeUnit)}
- * method, which checks the TTL value for each elements stored in the {@link SmartCache} and removes it
- * when expired.
+ * implements the {@link SmartCache#startAutoCleaner(long, long, long, java.util.concurrent.TimeUnit)},
+ * {@link SmartCache#startAutoCleaner(long, long, long, java.util.concurrent.TimeUnit, Object, java.lang.reflect.Method)},
+ * {@link SmartCache#startAutoCleaner(long, long, long, java.util.concurrent.TimeUnit, SmartCacheEventListener)}
+ * methods, which checks the TTL value for each elements stored in the {@link SmartCache} and removes it
+ * when expired. Also, {@link com.sohail.alam.mango_pi.smart.cache.SmartCache#stopAutoCleaner()} method is
+ * provided for you to cancel the Auto Cleaner Service when not needed.
  * </p>
  * <p>
  * But in order for this to work, your Data Structure must implement the {@link SmartCachePojo}, which
@@ -61,8 +65,12 @@ public abstract class AbstractSmartCache<K, V extends SmartCachePojo, E extends 
 
     /**
      * Instantiates a new {@link DefaultSmartCache}
+     *
+     * @param activateMBean This indicates whether to activate the SmartCache MBean.
+     *
+     * @throws SmartCacheException Throws any SmartCacheException whatsoever.
      */
-    public AbstractSmartCache(boolean activateMBean) throws Exception {
+    public AbstractSmartCache(boolean activateMBean) throws SmartCacheException {
         SMART_CACHE_DATA = new ConcurrentHashMap<K, V>();
         if (activateMBean) {
             new SmartCacheMBean<AbstractSmartCache>(this).startService();
@@ -227,15 +235,28 @@ public abstract class AbstractSmartCache<K, V extends SmartCachePojo, E extends 
         return SMART_CACHE_DATA.size();
     }
 
+    /**
+     * Gets SMART_CACHE_DATA data structure that holds all of the SmartCache entries
+     *
+     * @return the SMART_CACHE_DATA
+     */
     public ConcurrentHashMap<K, V> getSMART_CACHE_DATA() {
         return SMART_CACHE_DATA;
     }
 
+    /**
+     * Add smart cache events listener.
+     *
+     * @param smartCacheEventListener the smart cache event listener
+     */
     @Override
-    public void addSmartCacheEventsListener(E events) {
-        smartCacheEventListener = events;
+    public void addSmartCacheEventsListener(E smartCacheEventListener) {
+        this.smartCacheEventListener = smartCacheEventListener;
     }
 
+    /**
+     * Nothing to do here!! Only returns <code>false</code>
+     */
     @Override
     public boolean startAutoCleaner(long EXPIRY_DURATION, long START_TASK_DELAY, long REPEAT_TASK_DELAY, TimeUnit TIME_UNIT, Object CALLBACK_CLASS_OBJECT, Method CALLBACK_METHOD) throws SmartCacheException {
         return false;

@@ -21,7 +21,6 @@ import com.sohail.alam.mango_pi.jmx.wrapper.JMXBeanOperation;
 import com.sohail.alam.mango_pi.jmx.wrapper.JMXBeanParameter;
 import com.sohail.alam.mango_pi.utils.MBeanService;
 
-import javax.management.*;
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
 
@@ -54,15 +53,23 @@ public class SmartCacheMBean<T extends SmartCache> {
     /**
      * Start the MBean service
      */
-    public void startService() throws MalformedObjectNameException, IntrospectionException, NotCompliantMBeanException, InstanceAlreadyExistsException, MBeanRegistrationException {
-        MBeanService.startService(this, MBEAN_NAME);
+    public void startService() throws SmartCacheException {
+        try {
+            MBeanService.startService(this, MBEAN_NAME);
+        } catch (Exception e) {
+            throw new SmartCacheException("Smart Cache was unable to start the Smart Cache MBean Service: " + e.getMessage(), e);
+        }
     }
 
     /**
      * Stop the MBean Service
      */
-    public void stopService() throws MalformedObjectNameException, InstanceNotFoundException, MBeanRegistrationException {
-        MBeanService.stopService(MBEAN_NAME);
+    public void stopService() throws SmartCacheException {
+        try {
+            MBeanService.stopService(MBEAN_NAME);
+        } catch (Exception e) {
+            throw new SmartCacheException("Smart Cache was unable to stop the Smart Cache MBean Service: " + e.getMessage(), e);
+        }
     }
 
     /* ************************************************************************************

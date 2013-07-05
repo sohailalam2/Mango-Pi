@@ -17,6 +17,12 @@
 package com.sohail.alam.mango_pi.smart.cache;
 
 /**
+ * The {@link SmartCacheException}s are thrown in cases where the SmartCache System is
+ * not certain that whatever it has implemented will certainly work, for example,
+ * when you start the {@link SmartCache#startAutoCleaner(long, long, long, java.util.concurrent.TimeUnit, Object, java.lang.reflect.Method)}
+ * with the callback method, the SmartCache System may not be able to invoke the method and hence
+ * throws {@link SmartCacheException}.
+ * <p/>
  * User: Sohail Alam
  * Version: 1.0.0
  * Date: 4/7/13
@@ -24,18 +30,18 @@ package com.sohail.alam.mango_pi.smart.cache;
  */
 public class SmartCacheException extends Exception {
     public SmartCacheException() {
-        super();    //To change body of overridden methods use File | Settings | File Templates.
+        super();
     }
 
     public SmartCacheException(String message) {
-        super(message);    //To change body of overridden methods use File | Settings | File Templates.
+        super(message);
     }
 
     public SmartCacheException(String message, Throwable cause) {
-        super(message, cause);    //To change body of overridden methods use File | Settings | File Templates.
+        super(message, cause);
     }
 
     public SmartCacheException(Throwable cause) {
-        super(cause);    //To change body of overridden methods use File | Settings | File Templates.
+        super(cause);
     }
 }
