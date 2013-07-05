@@ -31,129 +31,110 @@ It is an ongoing project. Please feel free to contribute to this Project.
 
 * Lets Define a custom data structure that we need to save in SmartCache (See the example)
 
-> SmartCacheData.java
+SmartCacheData.java
 
-    ```java
-    public class SmartCacheData extends SmartCachePojo {
+```java
+public class SmartCacheData extends SmartCachePojo {
 
-        private String key;
-        private byte[][] data;
+    private String key;
+    private byte[][] data;
 
-        public SmartCacheData() {
-            super();
-        }
-
-        public SmartCacheData(String key, byte[][] data) {
-            this.setKey(key);
-            this.setData(data);
-        }
-
-        .....
-        ..... Some Getters and Setters
-        .....
+    public SmartCacheData() {
+        super();
     }
-    ```
 
+    public SmartCacheData(String key, byte[][] data) {
+         this.setKey(key);
+         this.setData(data);
+    }
+}
+```
 
 * Now lets Start the SmartCache service and insert data into the cache. We will also provide a callback method to SmartCache.
 
-> TestSmartCache.java
+TestSmartCache.java
 
-    ```java
-    public class TestSmartCache {
+```java
+public class TestSmartCache {
 
-        .....
-        .....  Some variables and Constants
-        .....
+    public TestSmartCache() {
 
-        public TestSmartCache() {
+        logger.info("Started with Test Smart Cache");
 
-                logger.info("Started with Test Smart Cache");
+        // Instantiate the Smart Cache (Here we take advantage of the helper class DefaultSmartCache)
+        final DefaultSmartCache<String, SmartCacheData, MyCacheListener> mySmartCache =
+              new DefaultSmartCache<String, SmartCacheData, MyCacheListener>();
 
-                // Instantiate the Smart Cache (Here we take advantage of the helper class DefaultSmartCache)
-                final DefaultSmartCache<String, SmartCacheData, MyCacheListener> mySmartCache =
-                          new DefaultSmartCache<String, SmartCacheData, MyCacheListener>();
+        // The Callback method which will be invoked by the Smart Cache when deleting an entry from the Cache
+        // This uses Java's Reflection API. Alternatively you can add SmartCacheEventListener to do the same job
+        // If you do not want the overhead of Reflection.
+           Method method = null;
+           try {
+               method = getClass().getDeclaredMethod("callback", SmartCachePojo.class);
+           } catch (Exception e) {
+               e.printStackTrace();
+           }
 
-                // The Callback method which will be invoked by the Smart Cache when deleting an entry from the Cache
-                // This uses Java's Reflection API. Alternatively you can add SmartCacheEventListener to do the same job
-                // If you do not want the overhead of Reflection.
-                Method method = null;
-                try {
-                    method = getClass().getDeclaredMethod("callback", SmartCachePojo.class);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+           // Start the auto cleaner service with the callback method, as created above
+           mySmartCache.startAutoCleaner(200, 0, 500, TimeUnit.MILLISECONDS, this, method);
 
-                // Start the auto cleaner service with the callback method, as created above
-                mySmartCache.startAutoCleaner(200, 0, 500, TimeUnit.MILLISECONDS, this, method);
-
-                // Finally put the data into the Smart Cache
-                for (int i = 0; i < 1000; i++) {
-                    mySmartCache.put("key" + i, new SmartCacheData("DATA" + i, createData(NUMBER_OF_CHUNKS, CHUNK_SIZE)));
-                }
-        }
-
-        .....
-        ..... Some other methods
-        .....
-
-        // This is your callback method. NOTE that it MUST take one argument of type V extends SmartCachePojo
-        public void callback(SmartCachePojo data) {
-                logger.info("Deleted Data which was created at: " + data.TIME_STAMP);
+           // Finally put the data into the Smart Cache
+           for (int i = 0; i < 1000; i++) {
+                mySmartCache.put("key" + i, new SmartCacheData("DATA" + i, createData(NUMBER_OF_CHUNKS, CHUNK_SIZE)));
         }
     }
-    ```
+
+    // This is your callback method. NOTE that it MUST take one argument of type V extends SmartCachePojo
+    public void callback(SmartCachePojo data) {
+         logger.info("Deleted Data which was created at: " + data.TIME_STAMP);
+    }
+}
+```
 
 * Optionally, we can simply implement SmartCacheEventListener and get callbacks
 (this will not use Java Reflection API)
 
-> MyCacheListener.java
+MyCacheListener.java
 
-    ```java
-    public class MyCacheListener implements SmartCacheEventListener {
+```java
+public class MyCacheListener implements SmartCacheEventListener {
 
-        public MyCacheListener() {
-            System.out.println("Added SmartCacheEventListener");
-        }
+     public MyCacheListener() {
+        System.out.println("Added SmartCacheEventListener");
+     }
 
-        @Override
-        public void onCreateCacheEntry(SmartCachePojo createdEntry) {
-            System.out.println("Data Inserted into Cache: " + createdEntry.getTIME_STAMP());
-        }
+     @Override
+     public void onCreateCacheEntry(SmartCachePojo createdEntry) {
+         System.out.println("Data Inserted into Cache: " + createdEntry.getTIME_STAMP());
+     }
 
-        @Override
-        public void onDeleteCacheEntry(SmartCachePojo deletedEntry) {
-            System.out.println("Data Deleted from the Cache: " + deletedEntry.getTIME_STAMP());
-        }
-    }
-    ```
+     @Override
+     public void onDeleteCacheEntry(SmartCachePojo deletedEntry) {
+         System.out.println("Data Deleted from the Cache: " + deletedEntry.getTIME_STAMP());
+     }
+}
+```
 
 Now simply add the above listener to your Cache.
 
-> TestSmartCache.java
+TestSmartCache.java
 
-    ...
-    ```java
-    // Instantiate the Smart Cache (Here we take advantage of the helper class DefaultSmartCache)
-    final DefaultSmartCache<String, SmartCacheData, MyCacheListener> mySmartCache =
-          new DefaultSmartCache<String, SmartCacheData, MyCacheListener>();
+```java
+// Instantiate the Smart Cache (Here we take advantage of the helper class DefaultSmartCache)
+   final DefaultSmartCache<String, SmartCacheData, MyCacheListener> mySmartCache =
+         new DefaultSmartCache<String, SmartCacheData, MyCacheListener>();
 
-    // Add an Event Listener to the Cache
-    mySmartCache.addSmartCacheEventsListener(new MyCacheListener());
-    ```
-    ...
-
+// Add an Event Listener to the Cache
+mySmartCache.addSmartCacheEventsListener(new MyCacheListener());
+```
 
 If you want you can start the Auto Cleaner Service for with this Listener
 
-> TestSmartCache.java
+TestSmartCache.java
 
-    ...
-    ```java
-    // Start the auto cleaner service
-    mySmartCache.startAutoCleaner(200, 0, 500, TimeUnit.MILLISECONDS);
-    ```
-    ...
-
+```java
+// Start the auto cleaner service
+mySmartCache.startAutoCleaner(200, 0, 500, TimeUnit.MILLISECONDS);
+```
 
 You are all done!! Enjoy :)
