@@ -19,6 +19,8 @@ package com.sohail.alam.mango_pi.examples.smart.cache;
 import com.sohail.alam.mango_pi.smart.cache.SmartCacheEventListener;
 import com.sohail.alam.mango_pi.smart.cache.SmartCachePojo;
 
+import java.util.logging.Logger;
+
 /**
  * User: Sohail Alam
  * Version: 1.0.0
@@ -27,17 +29,19 @@ import com.sohail.alam.mango_pi.smart.cache.SmartCachePojo;
  */
 public class MyCacheListener implements SmartCacheEventListener {
 
+    private final Logger LOGGER = Logger.getLogger(MyCacheListener.class.getName());
+
     public MyCacheListener() {
-        System.out.println("Added SmartCacheEventListener");
+        LOGGER.info("Added SmartCacheEventListener");
     }
 
     @Override
     public void onCreateCacheEntry(SmartCachePojo createdEntry) {
-        System.out.println("Data Inserted into Cache: " + createdEntry.getTIME_STAMP());
+        LOGGER.info("Data Inserted into Cache: " + createdEntry.getTIME_STAMP());
     }
 
     @Override
     public void onDeleteCacheEntry(SmartCachePojo deletedEntry) {
-        System.out.println("Data Deleted from the Cache: " + deletedEntry.getTIME_STAMP());
+        LOGGER.info("Data Deleted from the Cache: " + deletedEntry.getTIME_STAMP());
     }
 }

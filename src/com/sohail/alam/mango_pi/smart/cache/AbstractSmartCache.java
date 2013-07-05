@@ -16,10 +16,12 @@
 
 package com.sohail.alam.mango_pi.smart.cache;
 
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * <p>
@@ -232,5 +234,10 @@ public abstract class AbstractSmartCache<K, V extends SmartCachePojo, E extends 
     @Override
     public void addSmartCacheEventsListener(E events) {
         smartCacheEventListener = events;
+    }
+
+    @Override
+    public boolean startAutoCleaner(long EXPIRY_DURATION, long START_TASK_DELAY, long REPEAT_TASK_DELAY, TimeUnit TIME_UNIT, Object CALLBACK_CLASS_OBJECT, Method CALLBACK_METHOD) throws SmartCacheException {
+        return false;
     }
 }

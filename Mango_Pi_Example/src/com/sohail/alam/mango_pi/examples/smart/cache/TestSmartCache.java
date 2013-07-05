@@ -32,7 +32,7 @@ import java.util.logging.Logger;
  */
 public class TestSmartCache {
 
-    private final Logger logger = Logger.getLogger(TestSmartCache.class.getName());
+    private final Logger LOGGER = Logger.getLogger(TestSmartCache.class.getName());
     private final int NUMBER_OF_CHUNKS = 10;  // The number of chunks of binary data
     private final int CHUNK_SIZE = 1 * 1024 * 1024; // The size of each chunk in bytes
 
@@ -41,39 +41,11 @@ public class TestSmartCache {
      */
     public TestSmartCache() throws Exception {
 
-        logger.info("Started with Test Smart Cache");
+        LOGGER.info("Started with Test Smart Cache");
 
-        // Instantiate the Smart Cache (Here we take advantage of the helper class DefaultSmartCache)
-        final DefaultSmartCache<String, SmartCacheData, MyCacheListener> mySmartCache =
-                new DefaultSmartCache<String, SmartCacheData, MyCacheListener>();
+        testWithListener();
 
-        // Add an Event Listener to the Cache
-        mySmartCache.addSmartCacheEventsListener(new MyCacheListener());
-
-        // The Callback method which will be invoked by the Smart Cache when deleting an entry from the Cache
-        Method method = null;
-        try {
-            method = getClass().getDeclaredMethod("callback", SmartCachePojo.class);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        // Start the auto cleaner service
-        mySmartCache.startAutoCleaner(200, 0, 500, TimeUnit.MILLISECONDS, this, method);
-
-        // This is just for checking the number of entries in SmartCache and number of deleted entries
-//        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(new Runnable() {
-//            @Override
-//            public void run() {
-//                logger.info("Total Elements Present in Cache   : " + mySmartCache.size());
-//                logger.info("Total Elements Deleted from Cache : " + mySmartCache.getDeletedEntriesCounter());
-//            }
-//        }, 0, 1000, TimeUnit.MILLISECONDS);
-
-        // Finally put the data into the Smart Cache
-        for (int i = 0; i < 1000; i++) {
-            mySmartCache.put("key" + i, new SmartCacheData("DATA" + i, createData(NUMBER_OF_CHUNKS, CHUNK_SIZE)));
-        }
+        //testWithReflection();
     }
 
     /**
@@ -104,6 +76,53 @@ public class TestSmartCache {
      * @param data The deleted entry from the Smart Cache
      */
     public void callback(SmartCachePojo data) {
-//        logger.info("Deleted Data which was created at: " + data.getTIME_STAMP());
+        LOGGER.info("Deleted Data which was created at: " + data.getTIME_STAMP());
+    }
+
+    private void testWithListener() throws Exception {
+
+        LOGGER.info("Starting SmartCache Setup with SmartCacheEventListener");
+
+        // Instantiate the Smart Cache
+        // (Here we take advantage of the helper class DefaultSmartCache)
+        final DefaultSmartCache<String, SmartCacheData, MyCacheListener> mySmartCache =
+                new DefaultSmartCache<String, SmartCacheData, MyCacheListener>();
+
+        // Add an Event Listener to the Cache
+        mySmartCache.addSmartCacheEventsListener(new MyCacheListener());
+
+        // Start the auto cleaner service
+        mySmartCache.startAutoCleaner(200, 0, 500, TimeUnit.MILLISECONDS);
+
+        // Finally put the data into the Smart Cache
+        for (int i = 0; i < 1000; i++) {
+            mySmartCache.put("key" + i, new SmartCacheData("DATA" + i, createData(NUMBER_OF_CHUNKS, CHUNK_SIZE)));
+        }
+    }
+
+    private void testWithReflection() throws Exception {
+
+        LOGGER.info("Starting SmartCache Setup with Reflection Callback");
+
+        // Instantiate the Smart Cache
+        // (Here we take advantage of the helper class DefaultSmartCache)
+        final DefaultSmartCache<String, SmartCacheData, MyCacheListener> mySmartCache =
+                new DefaultSmartCache<String, SmartCacheData, MyCacheListener>();
+
+        // The Callback method which will be invoked by the Smart Cache when deleting an entry from the Cache
+        Method method = null;
+        try {
+            method = getClass().getDeclaredMethod("callback", SmartCachePojo.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // Start the auto cleaner service
+        mySmartCache.startAutoCleaner(200, 0, 500, TimeUnit.MILLISECONDS, this, method);
+
+        // Finally put the data into the Smart Cache
+        for (int i = 0; i < 1000; i++) {
+            mySmartCache.put("key" + i, new SmartCacheData("DATA" + i, createData(NUMBER_OF_CHUNKS, CHUNK_SIZE)));
+        }
     }
 }
