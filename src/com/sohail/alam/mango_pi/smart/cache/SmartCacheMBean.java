@@ -80,20 +80,24 @@ public class SmartCacheMBean<T extends SmartCache> {
      *                               SMART cache OPERATIONS                                *
      * ************************************************************************************/
 
-    @JMXBeanOperation(name = "startAutoCleaner", description = "Start the auto cleaner service for the given Smart Cache")
+    @JMXBeanOperation(name = "startAutoCleaner", description = "Start the auto cleaner service for the given Smart Cache (With a callback method, using Smart Cache Event Listener API)")
     public boolean startAutoCleaner(@JMXBeanParameter(name = "Expiry Duration", description = "The TTL Value for the Cache elements") final long EXPIRY_DURATION,
                                     @JMXBeanParameter(name = "Start Task Delay", description = "The delay after which the auto cleaner task starts") final long START_TASK_DELAY,
                                     @JMXBeanParameter(name = "Repeat Task Delay", description = "The delay after which the auto cleaner task repeats itself") final long REPEAT_TASK_DELAY,
-                                    @JMXBeanParameter(name = "Time Unit", description = "The Time Unit in which the previous two parameters are defined") final TimeUnit TIME_UNIT,
-                                    @JMXBeanParameter(name = "Callback Class Object", description = "An object of the Callback Class (can be null)") final Object CALLBACK_CLASS_OBJECT,
-                                    @JMXBeanParameter(name = "Callback Method", description = "The Callback Method (can be null)") final Method CALLBACK_METHOD) {
+                                    @JMXBeanParameter(name = "Time Unit", description = "The Time Unit in which the previous two parameters are defined") final TimeUnit TIME_UNIT) throws SmartCacheException {
 
-        try {
-            return this.cache.startAutoCleaner(EXPIRY_DURATION, START_TASK_DELAY, REPEAT_TASK_DELAY, TIME_UNIT, CALLBACK_CLASS_OBJECT, CALLBACK_METHOD);
-        } catch (SmartCacheException e) {
-            e.printStackTrace();
-        }
-        return false;
+        return this.cache.startAutoCleaner(EXPIRY_DURATION, START_TASK_DELAY, REPEAT_TASK_DELAY, TIME_UNIT);
+    }
+
+    @JMXBeanOperation(name = "startAutoCleanerReflection", description = "Start the auto cleaner service for the given Smart Cache (With a callback method, using Java Reflection API)")
+    public boolean startAutoCleanerReflection(@JMXBeanParameter(name = "Expiry Duration", description = "The TTL Value for the Cache elements") final long EXPIRY_DURATION,
+                                              @JMXBeanParameter(name = "Start Task Delay", description = "The delay after which the auto cleaner task starts") final long START_TASK_DELAY,
+                                              @JMXBeanParameter(name = "Repeat Task Delay", description = "The delay after which the auto cleaner task repeats itself") final long REPEAT_TASK_DELAY,
+                                              @JMXBeanParameter(name = "Time Unit", description = "The Time Unit in which the previous two parameters are defined") final TimeUnit TIME_UNIT,
+                                              @JMXBeanParameter(name = "Callback Class Object", description = "An object of the Callback Class (can be null)") final Object CALLBACK_CLASS_OBJECT,
+                                              @JMXBeanParameter(name = "Callback Method", description = "The Callback Method (can be null)") final Method CALLBACK_METHOD) throws SmartCacheException {
+
+        return this.cache.startAutoCleaner(EXPIRY_DURATION, START_TASK_DELAY, REPEAT_TASK_DELAY, TIME_UNIT, CALLBACK_CLASS_OBJECT, CALLBACK_METHOD);
     }
 
     @JMXBeanOperation(name = "stopAutoCleaner", description = "Stop the auto cleaner service for the given Smart Cache")
@@ -101,21 +105,43 @@ public class SmartCacheMBean<T extends SmartCache> {
         this.cache.stopAutoCleaner();
     }
 
+    @JMXBeanOperation(name = "restartAutoCleaner", description = "Restart the auto cleaner service for the given Smart Cache (With a callback method, using Smart Cache Event Listener API)")
+    public boolean restartAutoCleaner(@JMXBeanParameter(name = "Expiry Duration", description = "The TTL Value for the Cache elements") final long EXPIRY_DURATION,
+                                      @JMXBeanParameter(name = "Start Task Delay", description = "The delay after which the auto cleaner task starts") final long START_TASK_DELAY,
+                                      @JMXBeanParameter(name = "Repeat Task Delay", description = "The delay after which the auto cleaner task repeats itself") final long REPEAT_TASK_DELAY,
+                                      @JMXBeanParameter(name = "Time Unit", description = "The Time Unit in which the previous two parameters are defined") final TimeUnit TIME_UNIT) throws SmartCacheException {
+
+        this.cache.stopAutoCleaner();
+        return this.cache.startAutoCleaner(EXPIRY_DURATION, START_TASK_DELAY, REPEAT_TASK_DELAY, TIME_UNIT);
+    }
+
+    @JMXBeanOperation(name = "restartAutoCleanerReflection", description = "Restart the auto cleaner service for the given Smart Cache (With a callback method, using Java Reflection API)")
+    public boolean restartAutoCleanerReflection(@JMXBeanParameter(name = "Expiry Duration", description = "The TTL Value for the Cache elements") final long EXPIRY_DURATION,
+                                                @JMXBeanParameter(name = "Start Task Delay", description = "The delay after which the auto cleaner task starts") final long START_TASK_DELAY,
+                                                @JMXBeanParameter(name = "Repeat Task Delay", description = "The delay after which the auto cleaner task repeats itself") final long REPEAT_TASK_DELAY,
+                                                @JMXBeanParameter(name = "Time Unit", description = "The Time Unit in which the previous two parameters are defined") final TimeUnit TIME_UNIT,
+                                                @JMXBeanParameter(name = "Callback Class Object", description = "An object of the Callback Class (can be null)") final Object CALLBACK_CLASS_OBJECT,
+                                                @JMXBeanParameter(name = "Callback Method", description = "The Callback Method (can be null)") final Method CALLBACK_METHOD) throws SmartCacheException {
+
+        this.cache.stopAutoCleaner();
+        return this.cache.startAutoCleaner(EXPIRY_DURATION, START_TASK_DELAY, REPEAT_TASK_DELAY, TIME_UNIT, CALLBACK_CLASS_OBJECT, CALLBACK_METHOD);
+    }
+
     @JMXBeanOperation(name = "getDeletedEntriesCounter", description = "Gets the total number of entries deleted for this Smart Cache (available only if the cache is created using DefaultSmartCache)")
-    public long getDeletedEntriesCounter() throws SmartCacheException {
+    public long getDeletedEntriesCounter() throws SmartCacheMBeanException {
         if (cache instanceof DefaultSmartCache) {
             return ((DefaultSmartCache) cache).getDeletedEntriesCounter();
         } else {
-            throw new SmartCacheException("Given Cache is not an instance of DefaultSmartCache");
+            throw new SmartCacheMBeanException("Given Cache is not an instance of DefaultSmartCache");
         }
     }
 
     @JMXBeanOperation(name = "resetDeletedEntriesCounter", description = "Resets the total number of entries deleted for this Smart Cache to zero (available only if the cache is created using DefaultSmartCache)")
-    public void resetDeletedEntriesCounter() throws SmartCacheException {
+    public void resetDeletedEntriesCounter() throws SmartCacheMBeanException {
         if (cache instanceof DefaultSmartCache) {
             ((DefaultSmartCache) cache).resetDeletedEntriesCounter();
         } else {
-            throw new SmartCacheException("Given Cache is not an instance of DefaultSmartCache");
+            throw new SmartCacheMBeanException("Given Cache is not an instance of DefaultSmartCache");
         }
     }
 }

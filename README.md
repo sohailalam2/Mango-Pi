@@ -21,10 +21,17 @@ the Mango Pi Project.
 
 These are some of the things you will find in Mango Pi
 
-* ALGORITHMS
+* [ALGORITHMS](https://github.com/sohailalam2/Mango-Pi/tree/master/src/com/sohail/alam/mango_pi/algorithms)
     * Round Robin - This will return an item from a List using Round Robin Algorithm
 
-* SMART CACHE - A very simple in-memory caching system with auto-deletion features, event listener and more!
+* [JMX WRAPPER](https://github.com/sohailalam2/Mango-Pi/tree/master/src/com/sohail/alam/mango_pi/jmx/wrapper)
+    - Used for creating Dynamic MBeans with Annotations
 
-* VALIDATOR
+* [SMART CACHE](https://github.com/sohailalam2/Mango-Pi/tree/master/src/com/sohail/alam/mango_pi/smart/cache)
+    - A very simple in-memory caching system with auto-deletion features, event listener and more!
+
+* [UTILS](https://github.com/sohailalam2/Mango-Pi/tree/master/src/com/sohail/alam/mango_pi/utils)
+    - Various Utilities for common use
+
+* [VALIDATOR](https://github.com/sohailalam2/Mango-Pi/tree/master/src/com/sohail/alam/mango_pi/validator)
     * IP Port - Validate IPv4, IPv6 and Port address. Extract IP, Port information from a String of IP:PORT pattern.

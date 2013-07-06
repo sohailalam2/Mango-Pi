@@ -50,6 +50,7 @@
                 <attribute name="Class-Path" value="."/>
             </manifest>
             <fileset dir="${basedir}/out/production/Mango_Pi">
+                <include name='com/sohail/alam/mango_pi/jmx/wrapper/**.*'/>
                 <include name='com/sohail/alam/mango_pi/utils/**.*'/>
             </fileset>
         </jar>
