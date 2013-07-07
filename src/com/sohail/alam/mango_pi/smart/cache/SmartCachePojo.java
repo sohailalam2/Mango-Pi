@@ -37,15 +37,15 @@ public class SmartCachePojo {
 
     private final long TIME_STAMP;
     /**
-     * This represents the name of the Smart Cache. By default it takes the value of
-     * SMART_CACHE_(the time when the cache was created).
+     * This represents the name of the Smart Cache Data (the current data).
+     * By default it takes the value of SMART_CACHE_DATA_(the time when the cache was created).
      * You may override this value.
      */
-    public String SMART_CACHE_NAME;
+    public String SMART_CACHE_DATA_NAME;
 
     public SmartCachePojo() {
         TIME_STAMP = System.nanoTime();
-        SMART_CACHE_NAME = "SMART_CACHE_" + TIME_STAMP;
+        SMART_CACHE_DATA_NAME = "SMART_CACHE_DATA_" + TIME_STAMP;
     }
 
     /**

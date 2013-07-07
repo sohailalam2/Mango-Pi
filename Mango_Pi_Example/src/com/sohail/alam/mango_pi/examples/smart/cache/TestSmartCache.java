@@ -85,18 +85,19 @@ public class TestSmartCache {
 
         // Instantiate the Smart Cache
         // (Here we take advantage of the helper class DefaultSmartCache)
-        final DefaultSmartCache<String, SmartCacheData, MyCacheListener> mySmartCache =
-                new DefaultSmartCache<String, SmartCacheData, MyCacheListener>();
+        final DefaultSmartCache<String, SmartCacheData> mySmartCache =
+                new DefaultSmartCache<String, SmartCacheData>();
 
         // Add an Event Listener to the Cache
-        mySmartCache.addSmartCacheEventsListener(new MyCacheListener());
+//        mySmartCache.addSmartCacheEventsListener(new MyCacheListener());
 
         // Start the auto cleaner service
-        mySmartCache.startAutoCleaner(200, 0, 500, TimeUnit.MILLISECONDS);
+        mySmartCache.startAutoCleaner(2, 0, 1, TimeUnit.SECONDS);
 
         // Finally put the data into the Smart Cache
         for (int i = 0; i < 1000; i++) {
             mySmartCache.put("key" + i, new SmartCacheData("DATA" + i, createData(NUMBER_OF_CHUNKS, CHUNK_SIZE)));
+            Thread.sleep(100);
         }
     }
 
@@ -106,8 +107,8 @@ public class TestSmartCache {
 
         // Instantiate the Smart Cache
         // (Here we take advantage of the helper class DefaultSmartCache)
-        final DefaultSmartCache<String, SmartCacheData, MyCacheListener> mySmartCache =
-                new DefaultSmartCache<String, SmartCacheData, MyCacheListener>();
+        final DefaultSmartCache<String, SmartCacheData> mySmartCache =
+                new DefaultSmartCache<String, SmartCacheData>();
 
         // The Callback method which will be invoked by the Smart Cache when deleting an entry from the Cache
         Method method = null;

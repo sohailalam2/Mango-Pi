@@ -16,6 +16,8 @@
 
 package com.sohail.alam.mango_pi.smart.cache;
 
+import java.util.Map;
+
 /**
  * This {@link SmartCacheEventListener} interface exposes the events that the SmartCache system
  * is able to fire when certain conditions are met.
@@ -29,23 +31,44 @@ package com.sohail.alam.mango_pi.smart.cache;
  * Date: 4/7/13
  * Time: 9:21 PM
  */
-public interface SmartCacheEventListener<V extends SmartCachePojo> {
+public interface SmartCacheEventListener<K, V extends SmartCachePojo> {
 
     /**
      * Event for On create cache entry.
      * Whenever an element is inserted into the SmartCache, this event gets fired,
      * with the latest entry that was inserted into that cache.
      *
+     * @param key          the key
      * @param createdEntry the entry which was inserted into the Cache
      */
-    public void onCreateCacheEntry(V createdEntry);
+    public void onCreateCacheEntry(K key, V createdEntry);
 
     /**
      * Event for On delete cache entry.
      * Whenever an element is deleted from the SmartCache, this event gets fired,
      * with the deleted entry being passed as the method parameter.
      *
+     * @param key          the key
      * @param deletedEntry the entry which was deleted from the Cache
      */
-    public void onDeleteCacheEntry(V deletedEntry);
+    public void onDeleteCacheEntry(K key, V deletedEntry);
+
+    /**
+     * Event for On Single Entry Purge.
+     * Whenever an element is purged (deleted from cache for backup purpose),
+     * this event gets fired, with the deleted entry being passed as the method parameter.
+     *
+     * @param key           the key
+     * @param purgedElement the purged element
+     */
+    public void onSingleEntryPurge(K key, V purgedElement);
+
+    /**
+     * Event for On Cache Purge.
+     * Whenever the entire Cache gets purged (deleted for backup purpose),
+     * this event gets fired, with an Set containing the entire cache data.
+     *
+     * @param cacheList the cache list
+     */
+    public void onCachePurge(Map<K, V> cacheList);
 }

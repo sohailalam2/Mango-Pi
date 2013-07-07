@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit;
  * Date: 8/6/13
  * Time: 11:53 PM
  */
-public interface SmartCache<K, V, E extends SmartCacheEventListener> {
+public interface SmartCache<K, V> {
 
     /**
      * Checks whether the specified key is associated with any value in the {@link SmartCache}
@@ -80,12 +80,13 @@ public interface SmartCache<K, V, E extends SmartCacheEventListener> {
     /**
      * Removes the Data corresponding to the given Key from the {@link SmartCache}
      *
-     * @param key The Key of type
+     * @param key    The Key of type
+     * @param reason the reason
      *
      * @return The Data of type
      *         that was removed
      */
-    V remove(K key);
+    V remove(K key, String reason);
 
     /**
      * Puts an entire Map into the {@link SmartCache}
@@ -112,7 +113,7 @@ public interface SmartCache<K, V, E extends SmartCacheEventListener> {
      *         having Key of type
      *         and Data of type
      */
-    ConcurrentMap<K, V> removeAll();
+    ConcurrentMap<K, V> removeAll(String reason);
 
     /**
      * Returns a Set view of the keys contained in this map.
@@ -158,6 +159,8 @@ public interface SmartCache<K, V, E extends SmartCacheEventListener> {
      *                              NOTE: The Callback method must accept only one parameter of type
      *
      * @return if the Auto Cleaner Service was setup correctly, otherwise returns
+     *
+     * @throws SmartCacheException the smart cache exception
      */
     boolean startAutoCleaner(final long EXPIRY_DURATION, final long START_TASK_DELAY, final long REPEAT_TASK_DELAY, final TimeUnit TIME_UNIT,
                              final Object CALLBACK_CLASS_OBJECT, final Method CALLBACK_METHOD) throws SmartCacheException;
@@ -171,6 +174,8 @@ public interface SmartCache<K, V, E extends SmartCacheEventListener> {
      * @param TIME_UNIT         The Unit of time for the previous parameters
      *
      * @return if the Auto Cleaner Service was setup correctly, otherwise returns
+     *
+     * @throws SmartCacheException the smart cache exception
      */
     boolean startAutoCleaner(final long EXPIRY_DURATION, final long START_TASK_DELAY, final long REPEAT_TASK_DELAY, final TimeUnit TIME_UNIT) throws SmartCacheException;
 
@@ -184,6 +189,8 @@ public interface SmartCache<K, V, E extends SmartCacheEventListener> {
      * @param smartCacheEventListener the smart cache event listener
      *
      * @return if the Auto Cleaner Service was setup correctly, otherwise returns
+     *
+     * @throws SmartCacheException the smart cache exception
      */
     boolean startAutoCleaner(final long EXPIRY_DURATION, final long START_TASK_DELAY, final long REPEAT_TASK_DELAY, final TimeUnit TIME_UNIT, final SmartCacheEventListener smartCacheEventListener) throws SmartCacheException;
 
@@ -197,5 +204,74 @@ public interface SmartCache<K, V, E extends SmartCacheEventListener> {
      *
      * @param smartCacheEventListener the smart cache event listener
      */
-    void addSmartCacheEventsListener(E smartCacheEventListener);
+    void addSmartCacheEventsListener(SmartCacheEventListener smartCacheEventListener);
+
+    /**
+     * Purge the entire cache for backup purpose. Invoking this method will give a
+     * callback to {@link SmartCacheEventListener#onCachePurge(java.util.Map)}.
+     *
+     * @return the <code>true</code> if everything goes fine else <code>false</code>.
+     */
+    public boolean purgeCacheEntries();
+
+    /**
+     * Purges only the data corresponding to the given KEY.
+     * Invoking this method will give a callback to the
+     * {@link SmartCacheEventListener#onSingleEntryPurge(Object, SmartCachePojo)}.
+     *
+     * @param key the KEY
+     *
+     * @return the <code>true</code> if everything goes fine else <code>false</code>.
+     */
+    public boolean purgeCacheEntry(K key);
+
+    /**
+     * Purges only the data corresponding to the given set of KEYs.
+     * Invoking this method will give a callback to the
+     * {@link SmartCacheEventListener#onCachePurge(java.util.Map)}.
+     *
+     * @param keys the keys
+     *
+     * @return the boolean
+     */
+    public boolean purgeCacheEntry(Set<K> keys);
+
+    /**
+     * The interface containing some of the possible reasons for deleting the Cache entry
+     */
+    public interface SmartCacheDeleteReason {
+
+        /**
+         * Cache entry was deleted due to the following reason: DELETED_BY_USER.
+         */
+        public static final String DELETED_BY_USER = "DELETED_BY_USER";
+        /**
+         * Cache entry was deleted due to the following reason: ERROR.
+         */
+        public static final String ERROR = "ERROR";
+        /**
+         * Cache entry was deleted due to the following reason: EXCEPTION.
+         */
+        public static final String EXCEPTION = "EXCEPTION";
+        /**
+         * Cache entry was deleted due to the following reason: EXPIRED.
+         */
+        public static final String EXPIRED = "EXPIRED";
+        /**
+         * Cache entry was deleted due to the following reason: PURGED.
+         */
+        public static final String PURGED = "PURGED";
+        /**
+         * Cache entry was deleted due to the following reason: SUCCESSFUL.
+         */
+        public static final String SUCCESSFUL = "SUCCESSFUL";
+        /**
+         * Cache entry was deleted due to the following reason: UNKNOWN.
+         */
+        public static final String UNKNOWN = "UNKNOWN";
+        /**
+         * Cache entry was deleted due to the following reason: UNSUCCESSFUL.
+         */
+        public static final String UNSUCCESSFUL = "UNSUCCESSFUL";
+    }
 }

@@ -1,12 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="CodeStyleSettings">
+    <option name="fieldPrefix" value="" />
+    <option name="fieldSuffix" value="" />
+    <option name="localVariablePrefix" value="" />
+    <option name="localVariableSuffix" value="" />
+    <option name="parameterPrefix" value="" />
+    <option name="parameterSuffix" value="" />
+    <option name="staticFieldPrefix" value="" />
+    <option name="staticFieldSuffix" value="" />
+  </component>
   <component name="CppTools.Loader" reportImplicitCastToBool="false" reportNameReferencedOnce="false" version="3" compilerSelect="AUTO" />
   <component name="DBNavigator.Project.ConnectionManager">
     <connections />
   </component>
   <component name="DBNavigator.Project.DataEditorManager">
     <record-view-column-sorting-type value="BY_INDEX" />
-    <value-preview-text-wrapping value="true" />
+    <value-preview-text-wrapping value="false" />
     <value-preview-pinned value="false" />
   </component>
   <component name="DBNavigator.Project.DataExportManager">
@@ -356,7 +366,197 @@
       </general>
     </ddl-file-settings>
   </component>
+  <component name="EntryPointsManager">
+    <entry_points version="2.0" />
+  </component>
   <component name="IdProvider" IDEtalkID="24073B598ADE255FCC28D21F6F3FAA92" />
+  <component name="JavaDocConfiguration_1.0.5">
+    <GENERAL>
+      <MODE>UPDATE</MODE>
+      <OVERRIDDEN_METHODS>false</OVERRIDDEN_METHODS>
+      <SPLITTED_CLASS_NAME>true</SPLITTED_CLASS_NAME>
+      <LEVELS>
+        <LEVEL>METHOD</LEVEL>
+        <LEVEL>FIELD</LEVEL>
+        <LEVEL>TYPE</LEVEL>
+      </LEVELS>
+      <VISIBILITIES>
+        <VISIBILITY>PROTECTED</VISIBILITY>
+        <VISIBILITY>PUBLIC</VISIBILITY>
+      </VISIBILITIES>
+    </GENERAL>
+    <TEMPLATES>
+      <CLASSES>
+        <CLASS>
+          <KEY>^.*(public|protected|private)*.+interface\s+\w+.*</KEY>
+          <VALUE>/**\n
+ * The interface $name.\n
+ */</VALUE>
+        </CLASS>
+        <CLASS>
+          <KEY>^.*(public|protected|private)*.+enum\s+\w+.*</KEY>
+          <VALUE>/**\n
+ * The enum $name.\n
+ */</VALUE>
+        </CLASS>
+        <CLASS>
+          <KEY>^.*(public|protected|private)*.+class\s+\w+.*</KEY>
+          <VALUE>/**\n
+ * The type $name.\n
+ */</VALUE>
+        </CLASS>
+        <CLASS>
+          <KEY>.+</KEY>
+          <VALUE>/**\n
+ * The type $name.\n
+ */</VALUE>
+        </CLASS>
+      </CLASSES>
+      <CONSTRUCTORS>
+        <CONSTRUCTOR>
+          <KEY>.+</KEY>
+          <VALUE>/**\n
+ * Instantiates a new $name.\n
+
+     #if(!$element.parameterList.parameters.isEmpty())
+         *\n
+     #end
+     #foreach($parameter in $element.parameterList.parameters)
+         * @param $parameter.name the $paramNames[$parameter.name]\n
+     #end
+
+     #if(!$element.throwsList.referenceElements.isEmpty())
+         *\n
+     #end
+     #foreach($exception in $element.throwsList.referenceElements)
+         * @throws $exception.referenceName the $exceptionNames[$exception.referenceName]\n
+     #end
+
+ */</VALUE>
+        </CONSTRUCTOR>
+      </CONSTRUCTORS>
+      <METHODS>
+        <METHOD>
+          <KEY>^.*(public|protected|private)*\s*.*(\w(\s*&lt;.+&gt;)*)+\s+get\w+\s*\(.*\).+</KEY>
+          <VALUE>/**\n
+ * Gets $partName.\n
+
+     #if(!$element.parameterList.parameters.isEmpty())
+         *\n
+     #end
+     #foreach($parameter in $element.parameterList.parameters)
+         * @param $parameter.name the $paramNames[$parameter.name]\n
+     #end
+
+     #if($isNotVoid)
+         *\n
+         * @return the $partName\n
+     #end
+
+     #if(!$element.throwsList.referenceElements.isEmpty())
+         *\n
+     #end
+     #foreach($exception in $element.throwsList.referenceElements)
+         * @throws $exception.referenceName the $exceptionNames[$exception.referenceName]\n
+     #end
+
+ */</VALUE>
+        </METHOD>
+        <METHOD>
+          <KEY>^.*(public|protected|private)*\s*.*(void|\w(\s*&lt;.+&gt;)*)+\s+set\w+\s*\(.*\).+</KEY>
+          <VALUE>/**\n
+ * Sets $partName.\n
+
+     #if(!$element.parameterList.parameters.isEmpty())
+         *\n
+     #end
+     #foreach($parameter in $element.parameterList.parameters)
+         * @param $parameter.name the $paramNames[$parameter.name]\n
+     #end
+
+     #if($isNotVoid)
+         *\n
+         * @return the $partName\n
+     #end
+
+     #if(!$element.throwsList.referenceElements.isEmpty())
+         *\n
+     #end
+     #foreach($exception in $element.throwsList.referenceElements)
+         * @throws $exception.referenceName the $exceptionNames[$exception.referenceName]\n
+     #end
+
+ */</VALUE>
+        </METHOD>
+        <METHOD>
+          <KEY>^.*((public\s+static)|(static\s+public))\s+void\s+main\s*\(\s*String\s*(\[\s*\]|\.\.\.)\s+\w+\s*\).+</KEY>
+          <VALUE>/**\n
+ * The entry point of application.\n
+
+     #if(!$element.parameterList.parameters.isEmpty())
+         *\n
+     #end
+
+     * @param $element.parameterList.parameters[0].name the input arguments\n
+
+     #if(!$element.throwsList.referenceElements.isEmpty())
+         *\n
+     #end
+     #foreach($exception in $element.throwsList.referenceElements)
+         * @throws $exception.referenceName the $exceptionNames[$exception.referenceName]\n
+     #end
+
+ */</VALUE>
+        </METHOD>
+        <METHOD>
+          <KEY>.+</KEY>
+          <VALUE>/**\n
+ * $name#if($partName.isEmpty()) $return#end.\n
+
+     #if(!$element.parameterList.parameters.isEmpty())
+         *\n
+     #end
+     #foreach($parameter in $element.parameterList.parameters)
+         * @param $parameter.name the $paramNames[$parameter.name]\n
+     #end
+
+     #if($isNotVoid)
+         *\n
+         * @return the $return\n
+     #end
+
+     #if(!$element.throwsList.referenceElements.isEmpty())
+         *\n
+     #end
+     #foreach($exception in $element.throwsList.referenceElements)
+         * @throws $exception.referenceName the $exceptionNames[$exception.referenceName]\n
+     #end
+
+ */</VALUE>
+        </METHOD>
+      </METHODS>
+      <FIELDS>
+        <FIELD>
+          <KEY>^.*(public|protected|private)*.+static.*(\w\s\w)+.+</KEY>
+          <VALUE>/**\n
+ * The constant $element.getName().\n
+ */</VALUE>
+        </FIELD>
+        <FIELD>
+          <KEY>^.*(public|protected|private)*.*(\w\s\w)+.+</KEY>
+          <VALUE>/**\n
+ * The $name.\n
+ */</VALUE>
+        </FIELD>
+        <FIELD>
+          <KEY>.+</KEY>
+          <VALUE>/**\n
+ * The $name.\n
+ */</VALUE>
+        </FIELD>
+      </FIELDS>
+    </TEMPLATES>
+  </component>
   <component name="PomSorter">
     <option name="defaultSortMode" value="ALPHABETIC" />
     <option name="order">
@@ -411,6 +611,10 @@
           </option>
         </TagSortingSetting>
         <TagSortingSetting>
+          <option name="mode" value="ARTIFACT" />
+          <option name="name" value="dependencies" />
+        </TagSortingSetting>
+        <TagSortingSetting>
           <option name="mode" value="FIXED" />
           <option name="name" value="pluginRepository" />
           <option name="order">
@@ -419,10 +623,6 @@
               <option value="url" />
             </list>
           </option>
-        </TagSortingSetting>
-        <TagSortingSetting>
-          <option name="mode" value="ARTIFACT" />
-          <option name="name" value="dependencies" />
         </TagSortingSetting>
         <TagSortingSetting>
           <option name="mode" value="FIXED" />
@@ -452,6 +652,15 @@
         </TagSortingSetting>
         <TagSortingSetting>
           <option name="mode" value="FIXED" />
+          <option name="name" value="profile" />
+          <option name="order">
+            <list>
+              <option value="id" />
+            </list>
+          </option>
+        </TagSortingSetting>
+        <TagSortingSetting>
+          <option name="mode" value="FIXED" />
           <option name="name" value="execution" />
           <option name="order">
             <list>
@@ -460,36 +669,11 @@
             </list>
           </option>
         </TagSortingSetting>
-        <TagSortingSetting>
-          <option name="mode" value="FIXED" />
-          <option name="name" value="profile" />
-          <option name="order">
-            <list>
-              <option value="id" />
-            </list>
-          </option>
-        </TagSortingSetting>
       </list>
     </option>
   </component>
   <component name="ProjectRootManager" version="2" languageLevel="JDK_1_6" assert-keyword="true" jdk-15="true" project-jdk-name="1.6" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/out" />
-  </component>
-  <component name="masterDetails">
-    <states>
-      <state key="ProjectJDKs.UI">
-        <settings>
-          <last-edited>1.6</last-edited>
-          <splitter-proportions>
-            <option name="proportions">
-              <list>
-                <option value="0.2" />
-              </list>
-            </option>
-          </splitter-proportions>
-        </settings>
-      </state>
-    </states>
   </component>
 </project>
 

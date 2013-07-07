@@ -18,10 +18,15 @@ package com.sohail.alam.mango_pi.smart.cache;
 
 import java.lang.reflect.Method;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
+
+import static com.sohail.alam.mango_pi.smart.cache.SmartCache.SmartCacheDeleteReason.PURGED;
+import static com.sohail.alam.mango_pi.smart.cache.SmartCacheHistoryImpl.HISTORY;
 
 /**
  * <p>
@@ -39,7 +44,7 @@ import java.util.concurrent.TimeUnit;
  * {@link SmartCache#startAutoCleaner(long, long, long, java.util.concurrent.TimeUnit, Object, java.lang.reflect.Method)},
  * {@link SmartCache#startAutoCleaner(long, long, long, java.util.concurrent.TimeUnit, SmartCacheEventListener)}
  * methods, which checks the TTL value for each elements stored in the {@link SmartCache} and removes it
- * when expired. Also, {@link com.sohail.alam.mango_pi.smart.cache.SmartCache#stopAutoCleaner()} method is
+ * when expired. Also, {@link SmartCache#stopAutoCleaner()} method is
  * provided for you to cancel the Auto Cleaner Service when not needed.
  * </p>
  * <p>
@@ -58,7 +63,7 @@ import java.util.concurrent.TimeUnit;
  * Date: 9/6/13
  * Time: 1:14 AM
  */
-public abstract class AbstractSmartCache<K, V extends SmartCachePojo, E extends SmartCacheEventListener> implements SmartCache<K, V, E> {
+public abstract class AbstractSmartCache<K, V extends SmartCachePojo> implements SmartCache<K, V> {
 
     private final ConcurrentHashMap<K, V> SMART_CACHE_DATA;
     private SmartCacheEventListener smartCacheEventListener = null;
@@ -73,7 +78,7 @@ public abstract class AbstractSmartCache<K, V extends SmartCachePojo, E extends 
     public AbstractSmartCache(boolean activateMBean) throws SmartCacheException {
         SMART_CACHE_DATA = new ConcurrentHashMap<K, V>();
         if (activateMBean) {
-            new SmartCacheMBean<AbstractSmartCache>(this).startService();
+            new SmartCacheManager<AbstractSmartCache, K, V>(this).startSmartCacheMBeanService();
         }
     }
 
@@ -121,7 +126,7 @@ public abstract class AbstractSmartCache<K, V extends SmartCachePojo, E extends 
     public void put(K key, V data) throws NullPointerException {
         SMART_CACHE_DATA.put(key, data);
         if (smartCacheEventListener != null)
-            smartCacheEventListener.onCreateCacheEntry(data);
+            smartCacheEventListener.onCreateCacheEntry(key, data);
     }
 
     /**
@@ -144,16 +149,19 @@ public abstract class AbstractSmartCache<K, V extends SmartCachePojo, E extends 
     /**
      * Removes the Data corresponding to the given Key from the {@link com.sohail.alam.mango_pi.smart.cache.SmartCache}
      *
-     * @param key The Key of type {@link K}
+     * @param key    The Key of type
+     * @param reason the reason
      *
-     * @return The Data of type {@link V} that was removed
+     * @return The Data of type
+     *         that was removed
      */
     @Override
-    public V remove(K key) throws NullPointerException {
+    public V remove(K key, String reason) {
         V data;
         if ((data = SMART_CACHE_DATA.remove(key)) != null) {
+            HISTORY.addToHistory(reason, key, data);
             if (smartCacheEventListener != null)
-                smartCacheEventListener.onDeleteCacheEntry(data);
+                smartCacheEventListener.onDeleteCacheEntry(key, data);
             return data;
         } else {
             return null;
@@ -167,7 +175,6 @@ public abstract class AbstractSmartCache<K, V extends SmartCachePojo, E extends 
      */
     @Override
     public void putAll(ConcurrentMap<K, V> dataMap) {
-
         SMART_CACHE_DATA.putAll(dataMap);
     }
 
@@ -188,10 +195,11 @@ public abstract class AbstractSmartCache<K, V extends SmartCachePojo, E extends 
      * @return dataMap Map of type {@link java.util.concurrent.ConcurrentMap} having Key of type {@link K} and Data of type {@link V}
      */
     @Override
-    public ConcurrentMap<K, V> removeAll() {
+    public ConcurrentMap<K, V> removeAll(String reason) {
 
         ConcurrentMap<K, V> tempData = SMART_CACHE_DATA;
         SMART_CACHE_DATA.clear();
+        HISTORY.addAllToHistory(reason, tempData);
         return tempData;
     }
 
@@ -250,7 +258,7 @@ public abstract class AbstractSmartCache<K, V extends SmartCachePojo, E extends 
      * @param smartCacheEventListener the smart cache event listener
      */
     @Override
-    public void addSmartCacheEventsListener(E smartCacheEventListener) {
+    public void addSmartCacheEventsListener(SmartCacheEventListener smartCacheEventListener) {
         this.smartCacheEventListener = smartCacheEventListener;
     }
 
@@ -260,5 +268,60 @@ public abstract class AbstractSmartCache<K, V extends SmartCachePojo, E extends 
     @Override
     public boolean startAutoCleaner(long EXPIRY_DURATION, long START_TASK_DELAY, long REPEAT_TASK_DELAY, TimeUnit TIME_UNIT, Object CALLBACK_CLASS_OBJECT, Method CALLBACK_METHOD) throws SmartCacheException {
         return false;
+    }
+
+    /**
+     * Purges only the data corresponding to the given KEY.
+     * Invoking this method will give a callback to the
+     * {@link com.sohail.alam.mango_pi.smart.cache.SmartCacheEventListener#onSingleEntryPurge(Object, SmartCachePojo)}.
+     *
+     * @param key the KEY
+     *
+     * @return the <code>true</code> if everything goes fine else <code>false</code>.
+     */
+    @Override
+    public boolean purgeCacheEntry(K key) {
+        if (smartCacheEventListener != null) {
+            V value = SMART_CACHE_DATA.remove(key);
+            HISTORY.addToHistory(PURGED, key, value);
+            smartCacheEventListener.onSingleEntryPurge(key, value);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Purges only the data corresponding to the given set of KEYs.
+     * Invoking this method will give a callback to the
+     * {@link com.sohail.alam.mango_pi.smart.cache.SmartCacheEventListener#onCachePurge(java.util.Map)}.
+     *
+     * @param keys the keys
+     *
+     * @return the boolean
+     */
+    @Override
+    public boolean purgeCacheEntry(Set<K> keys) {
+        Map<K, V> cacheEntries = new HashMap<K, V>();
+        if (smartCacheEventListener != null) {
+            for (K key : keys) {
+                V value = SMART_CACHE_DATA.remove(key);
+                cacheEntries.put(key, value);
+                HISTORY.addToHistory(PURGED, key, value);
+            }
+            smartCacheEventListener.onCachePurge(cacheEntries);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Purge the entire cache for backup purpose. Invoking this method will give a
+     * callback to {@link com.sohail.alam.mango_pi.smart.cache.SmartCacheEventListener#onCachePurge(java.util.Map)}.
+     *
+     * @return the <code>true</code> if everything goes fine else <code>false</code>.
+     */
+    @Override
+    public boolean purgeCacheEntries() {
+        return purgeCacheEntry(keySet());
     }
 }

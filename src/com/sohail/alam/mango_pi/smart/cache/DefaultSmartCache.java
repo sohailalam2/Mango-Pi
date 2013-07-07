@@ -23,6 +23,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static com.sohail.alam.mango_pi.smart.cache.SmartCache.SmartCacheDeleteReason.EXPIRED;
+
 /**
  * <p>
  * this concrete class {@link DefaultSmartCache} extends {@link AbstractSmartCache} and
@@ -44,7 +46,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * Date: 9/6/13
  * Time: 12:27 AM
  */
-public class DefaultSmartCache<K, V extends SmartCachePojo, E extends SmartCacheEventListener> extends AbstractSmartCache<K, V, E> {
+public class DefaultSmartCache<K, V extends SmartCachePojo> extends AbstractSmartCache<K, V> {
 
     private Executors autoCleanerExecutor;
     private ScheduledExecutorService autoCleanerService = null;
@@ -56,11 +58,11 @@ public class DefaultSmartCache<K, V extends SmartCachePojo, E extends SmartCache
      */
     public DefaultSmartCache() throws SmartCacheException {
         super(false);
-        new SmartCacheMBean<DefaultSmartCache>(this).startService();
+        new SmartCacheManager<DefaultSmartCache, K, V>(this).startSmartCacheMBeanService();
     }
 
     @Override
-    public void addSmartCacheEventsListener(E events) {
+    public void addSmartCacheEventsListener(SmartCacheEventListener events) {
         super.addSmartCacheEventsListener(events);
         smartCacheEventListener = events;
     }
@@ -102,7 +104,7 @@ public class DefaultSmartCache<K, V extends SmartCachePojo, E extends SmartCache
                         // Delete and Provide Callback if needed
                         if (CALLBACK_CLASS_OBJECT != null && CALLBACK_METHOD != null) {
                             try {
-                                CALLBACK_METHOD.invoke(CALLBACK_CLASS_OBJECT, remove(key));
+                                CALLBACK_METHOD.invoke(CALLBACK_CLASS_OBJECT, remove(key, EXPIRED));
                             } catch (IllegalAccessException e) {
                                 anyException[0] = new SmartCacheException("IllegalAccessException: " + e.getMessage(), e);
                                 break;
@@ -111,7 +113,7 @@ public class DefaultSmartCache<K, V extends SmartCachePojo, E extends SmartCache
                                 break;
                             }
                         } else {
-                            remove(key);
+                            remove(key, EXPIRED);
                         }
                     }
                 }
@@ -127,7 +129,7 @@ public class DefaultSmartCache<K, V extends SmartCachePojo, E extends SmartCache
     @Override
     public boolean startAutoCleaner(long EXPIRY_DURATION, long START_TASK_DELAY, long REPEAT_TASK_DELAY, TimeUnit TIME_UNIT, final SmartCacheEventListener smartCacheEventListener) throws SmartCacheException {
 
-        this.addSmartCacheEventsListener((E) smartCacheEventListener);
+        this.addSmartCacheEventsListener(smartCacheEventListener);
         return startAutoCleaner(EXPIRY_DURATION, START_TASK_DELAY, REPEAT_TASK_DELAY, TIME_UNIT);
     }
 
@@ -149,7 +151,7 @@ public class DefaultSmartCache<K, V extends SmartCachePojo, E extends SmartCache
                             // Increment the deletedEntriesCounter
                             deletedEntriesCounter.incrementAndGet();
                             // Delete and Provide Callback if needed
-                            remove(key);
+                            remove(key, EXPIRED);
                         }
                     }
                 }

@@ -19,6 +19,7 @@ package com.sohail.alam.mango_pi.examples.smart.cache;
 import com.sohail.alam.mango_pi.smart.cache.SmartCacheEventListener;
 import com.sohail.alam.mango_pi.smart.cache.SmartCachePojo;
 
+import java.util.Map;
 import java.util.logging.Logger;
 
 /**
@@ -35,13 +36,54 @@ public class MyCacheListener implements SmartCacheEventListener {
         LOGGER.info("Added SmartCacheEventListener");
     }
 
+    /**
+     * Event for On create cache entry.
+     * Whenever an element is inserted into the SmartCache, this event gets fired,
+     * with the latest entry that was inserted into that cache.
+     *
+     * @param key          the key
+     * @param createdEntry the entry which was inserted into the Cache
+     */
     @Override
-    public void onCreateCacheEntry(SmartCachePojo createdEntry) {
-        LOGGER.info("Data Inserted into Cache: " + createdEntry.getTIME_STAMP());
+    public void onCreateCacheEntry(Object key, SmartCachePojo createdEntry) {
+        LOGGER.info("Cache Entry was CREATED => Key: " + key + " Time: " + createdEntry.getTIME_STAMP());
     }
 
+    /**
+     * Event for On delete cache entry.
+     * Whenever an element is deleted from the SmartCache, this event gets fired,
+     * with the deleted entry being passed as the method parameter.
+     *
+     * @param key          the key
+     * @param deletedEntry the entry which was deleted from the Cache
+     */
     @Override
-    public void onDeleteCacheEntry(SmartCachePojo deletedEntry) {
-        LOGGER.info("Data Deleted from the Cache: " + deletedEntry.getTIME_STAMP());
+    public void onDeleteCacheEntry(Object key, SmartCachePojo deletedEntry) {
+        LOGGER.info("Cache Entry was DELETED => Key: " + key + " Time: " + deletedEntry.getTIME_STAMP());
+    }
+
+    /**
+     * Event for On Single Entry Purge.
+     * Whenever an element is purged (deleted from cache for backup purpose),
+     * this event gets fired, with the deleted entry being passed as the method parameter.
+     *
+     * @param key           the key
+     * @param purgedElement the purged element
+     */
+    @Override
+    public void onSingleEntryPurge(Object key, SmartCachePojo purgedElement) {
+        LOGGER.info("Cache Entry was PURGED => Key: " + key + " Time: " + purgedElement.getTIME_STAMP());
+    }
+
+    /**
+     * Event for On Cache Purge.
+     * Whenever the entire Cache gets purged (deleted for backup purpose),
+     * this event gets fired, with an Set containing the entire cache data.
+     *
+     * @param cacheList the cache list
+     */
+    @Override
+    public void onCachePurge(Map cacheList) {
+        LOGGER.info("Cache was PURGED : \n" + cacheList);
     }
 }
