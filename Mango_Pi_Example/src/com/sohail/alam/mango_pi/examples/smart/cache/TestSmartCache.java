@@ -89,7 +89,7 @@ public class TestSmartCache {
                 new DefaultSmartCache<String, SmartCacheData>();
 
         // Add an Event Listener to the Cache
-//        mySmartCache.addSmartCacheEventsListener(new MyCacheListener());
+        mySmartCache.addSmartCacheEventsListener(new MyCacheListener());
 
         // Start the auto cleaner service
         mySmartCache.startAutoCleaner(2, 0, 1, TimeUnit.SECONDS);

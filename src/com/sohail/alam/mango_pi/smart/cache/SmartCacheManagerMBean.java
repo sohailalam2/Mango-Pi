@@ -236,6 +236,15 @@ public interface SmartCacheManagerMBean<K> {
     public void autoDeleteHistory(int maxElementCount);
 
     /**
+     * Purges the contents of History into a user defined file.
+     * By default the SmartCache will dump the data into a file named -
+     * Smart_Cache_History_(current-date/time).txt
+     *
+     * @param filePath the absolute file path for the dump file.
+     */
+    public void purgeHistory(String filePath) throws Exception;
+
+    /**
      * Gets deleted entries counter.
      *
      * @return the deleted entries counter

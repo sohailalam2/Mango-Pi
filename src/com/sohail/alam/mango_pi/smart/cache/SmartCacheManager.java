@@ -420,9 +420,9 @@ public class SmartCacheManager<T extends SmartCache, K, V extends SmartCachePojo
      * @return the string
      */
     @Override
-    @JMXBeanOperation(name = "viewHistoryForKey", description = "View History")
+    @JMXBeanOperation(name = "viewHistory", description = "View History")
     public String viewHistoryForKey(@JMXBeanParameter(name = "Key", description = "The Key for the Cache Element") K key) {
-        return HISTORY.viewHistoryForKey(key);
+        return HISTORY.viewHistory(key);
     }
 
     /**
@@ -459,6 +459,19 @@ public class SmartCacheManager<T extends SmartCache, K, V extends SmartCachePojo
     @JMXBeanOperation(name = "autoDeleteHistory", description = "Set the maximum number of entries after which the History is deleted permanently")
     public void autoDeleteHistory(@JMXBeanParameter(name = "Max Element Count", description = "The Maximum number of elements to keep in History") int maxElementCount) {
         HISTORY.autoDeleteHistory(maxElementCount);
+    }
+
+    /**
+     * Purges the contents of History into a user defined file.
+     * By default the SmartCache will dump the data into a file named -
+     * SmartCacheHistory_(current-date/time).txt
+     *
+     * @param filePath the absolute file path for the dump file.
+     */
+    @Override
+    @JMXBeanOperation(name = "purgeHistory", description = "Purges the contents of History into a user defined file")
+    public void purgeHistory(@JMXBeanParameter(name = "File Path", description = "By default the SmartCache will dump the data into a file named - SmartCacheHistory_(current-date/time).txt") String filePath) throws Exception {
+        HISTORY.purgeHistory(filePath);
     }
 
     /**

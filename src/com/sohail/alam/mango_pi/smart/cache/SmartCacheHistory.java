@@ -34,7 +34,7 @@ public interface SmartCacheHistory<K, V extends SmartCachePojo> {
      *
      * @return the string
      */
-    public String viewHistoryForKey(K key);
+    public String viewHistory(K key);
 
     /**
      * View history.
@@ -59,4 +59,13 @@ public interface SmartCacheHistory<K, V extends SmartCachePojo> {
      * @param maxElementCount the max element count
      */
     public void autoDeleteHistory(int maxElementCount);
+
+    /**
+     * Purges the contents of History into a user defined file.
+     * By default the SmartCache will dump the data into a file named -
+     * SmartCacheHistory_(current-date/time).txt
+     *
+     * @param filePath the absolute file path for the dump file.
+     */
+    public void purgeHistory(String filePath) throws Exception;
 }

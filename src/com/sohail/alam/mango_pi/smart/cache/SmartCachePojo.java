@@ -44,7 +44,7 @@ public class SmartCachePojo {
     public String SMART_CACHE_DATA_NAME;
 
     public SmartCachePojo() {
-        TIME_STAMP = System.nanoTime();
+        TIME_STAMP = System.currentTimeMillis();
         SMART_CACHE_DATA_NAME = "SMART_CACHE_DATA_" + TIME_STAMP;
     }
 

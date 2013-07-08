@@ -17,13 +17,8 @@
 package com.sohail.alam.mango_pi.smart.cache;
 
 import java.lang.reflect.Method;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.*;
 
 import static com.sohail.alam.mango_pi.smart.cache.SmartCache.SmartCacheDeleteReason.PURGED;
 import static com.sohail.alam.mango_pi.smart.cache.SmartCacheHistoryImpl.HISTORY;
@@ -66,6 +61,7 @@ import static com.sohail.alam.mango_pi.smart.cache.SmartCacheHistoryImpl.HISTORY
 public abstract class AbstractSmartCache<K, V extends SmartCachePojo> implements SmartCache<K, V> {
 
     private final ConcurrentHashMap<K, V> SMART_CACHE_DATA;
+    private final ExecutorService PURGE_EXECUTOR = Executors.newSingleThreadExecutor();
     private SmartCacheEventListener smartCacheEventListener = null;
 
     /**
@@ -281,12 +277,7 @@ public abstract class AbstractSmartCache<K, V extends SmartCachePojo> implements
      */
     @Override
     public boolean purgeCacheEntry(K key) {
-        if (smartCacheEventListener != null) {
-            V value = SMART_CACHE_DATA.remove(key);
-            HISTORY.addToHistory(PURGED, key, value);
-            smartCacheEventListener.onSingleEntryPurge(key, value);
-            return true;
-        }
+        PURGE_EXECUTOR.execute(new PurgerClass(key));
         return false;
     }
 
@@ -301,17 +292,8 @@ public abstract class AbstractSmartCache<K, V extends SmartCachePojo> implements
      */
     @Override
     public boolean purgeCacheEntry(Set<K> keys) {
-        Map<K, V> cacheEntries = new HashMap<K, V>();
-        if (smartCacheEventListener != null) {
-            for (K key : keys) {
-                V value = SMART_CACHE_DATA.remove(key);
-                cacheEntries.put(key, value);
-                HISTORY.addToHistory(PURGED, key, value);
-            }
-            smartCacheEventListener.onCachePurge(cacheEntries);
-            return true;
-        }
-        return false;
+        PURGE_EXECUTOR.execute(new PurgerClass(keys));
+        return true;
     }
 
     /**
@@ -323,5 +305,32 @@ public abstract class AbstractSmartCache<K, V extends SmartCachePojo> implements
     @Override
     public boolean purgeCacheEntries() {
         return purgeCacheEntry(keySet());
+    }
+
+    private final class PurgerClass implements Runnable {
+
+        Set<K> keys = keySet();
+
+        public PurgerClass(Set<K> keys) {
+            this.keys = keys;
+        }
+
+        public PurgerClass(K key) {
+            keys = new HashSet<K>(1);
+            keys.add(key);
+        }
+
+        @Override
+        public void run() {
+            Map<K, V> cacheEntries = new HashMap<K, V>();
+            if (smartCacheEventListener != null) {
+                for (K key : keys) {
+                    V value = SMART_CACHE_DATA.remove(key);
+                    cacheEntries.put(key, value);
+                    HISTORY.addToHistory(PURGED, key, value);
+                }
+                smartCacheEventListener.onCachePurge(cacheEntries);
+            }
+        }
     }
 }

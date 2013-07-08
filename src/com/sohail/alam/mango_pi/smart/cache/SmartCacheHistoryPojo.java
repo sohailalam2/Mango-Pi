@@ -1,5 +1,6 @@
 package com.sohail.alam.mango_pi.smart.cache;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
@@ -13,11 +14,11 @@ class SmartCacheHistoryPojo<K, V extends SmartCachePojo> {
     /**
      * The CREATION TIME.
      */
-    public final Date CREATION_TIME;
+    public final String CREATION_TIME;
     /**
      * The DELETION TIME.
      */
-    public final Date DELETION_TIME;
+    public final String DELETION_TIME;
     /**
      * The DELETE REASON.
      */
@@ -39,9 +40,9 @@ class SmartCacheHistoryPojo<K, V extends SmartCachePojo> {
      * @param creationTime the creation time
      */
     public SmartCacheHistoryPojo(String deleteReason, K key, long creationTime) {
-        this.CREATION_TIME = new Date(creationTime);
+        this.CREATION_TIME = (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")).format(new Date(creationTime));
         this.DELETE_REASON = deleteReason;
-        this.DELETION_TIME = new Date(System.nanoTime());
+        this.DELETION_TIME = (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")).format(new Date(System.currentTimeMillis()));
         this.KEY = key;
         this.SMART_CACHE_DATA_NAME = "";
     }
@@ -54,9 +55,9 @@ class SmartCacheHistoryPojo<K, V extends SmartCachePojo> {
      * @param pojo         the pojo
      */
     public SmartCacheHistoryPojo(String deleteReason, K key, V pojo) {
-        this.CREATION_TIME = new Date(pojo.getTIME_STAMP());
+        this.CREATION_TIME = (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")).format(new Date(pojo.getTIME_STAMP()));
         this.DELETE_REASON = deleteReason;
-        this.DELETION_TIME = new Date(System.nanoTime());
+        this.DELETION_TIME = (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")).format(new Date(System.currentTimeMillis()));
         this.KEY = key;
         this.SMART_CACHE_DATA_NAME = pojo.SMART_CACHE_DATA_NAME;
     }
