@@ -205,7 +205,7 @@ class SmartCacheHistoryImpl<K, V extends SmartCachePojo> implements SmartCacheHi
             dir.mkdirs();
 
             // Create the file
-            File file = new File(fileName);
+            File file = new File(dir.getAbsoluteFile() + fileName);
             FileOutputStream fos = null;
             try {
                 fos = new FileOutputStream(file);
