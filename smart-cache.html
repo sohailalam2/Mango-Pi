@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <title>Mango-Pi : Smart Cache by sohailalam2</title>
+  </head>
+
+  <body>
+    <header>
+      <div class="inner">
+        <h1>Mango-Pi : Smart Cache</h1>
+        <h2>The SmartCache is an independent module of Mango Pi, which provides you a very simple and easy to use in-memory caching system.</h2>
+        <a href="https://github.com/sohailalam2/Mango-Pi" class="button"><small>View project on</small>GitHub</a>
+      </div>
+    </header>
+
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <section id="main-content">
+          <h1>
+<a name="smart-cache" class="anchor" href="#smart-cache"><span class="octicon octicon-link"></span></a>SMART CACHE</h1>
+
+<p>The SmartCache is an independent module of Mango Pi, which provides you a very simple and easy to use
+in-memory caching system. There are basically four components to this SmartCache module,</p>
+
+<ul>
+<li>
+<p>SmartCache                (Interface)</p>
+
+<ul>
+<li>Declaring all the methods that the SmartCache module supports</li>
+</ul>
+</li>
+<li>
+<p>AbstractSmartCache        (Abstract Class)</p>
+
+<ul>
+<li>An abstract class that defines all of the SmartCache methods, except the 'startAutoCleaner' and 'stopAutoCleaner' methods.
+To make things easy for you, AbstractSmartCache overrides the 'startAutoCleaner()' method which
+uses Java's Reflection API, but only returns 'false'. This was done to make it easy for you to
+extend the AbstractSmartCache. If you need Reflection, simply override this method.</li>
+</ul>
+</li>
+<li>
+<p>SmartCachePojo            (Class)</p>
+
+<ul>
+<li>A class that the SmartCache module uses in order to find out the creation time of the cache,
+also stores a unique name for this instance of Cache (which you can configure).</li>
+</ul>
+</li>
+<li>
+<p>SmartCacheEventListener   (Interface)</p>
+
+<ul>
+<li>An interface which contains the events signature. You can add Listener to your cache to be
+notified when an event occurs, such as when an item is added or removed from the cache.</li>
+</ul>
+</li>
+</ul><p>There is also a 'DefaultSmartCache' helper class which implements all the methods of 'SmartCache' interface.
+This helper class will clear the cache for you in background thread, according to the TTL value that you set for the cache elements.</p>
+
+<p><strong>PLEASE NOTE:</strong> <em>Your data structure must extend the 'SmartCachePojo' class in order for this helper class (DefaultSmartCache) to work. (See the example)s</em></p>
+
+<p>It is an ongoing project. Please feel free to contribute to this Project.</p>
+
+<h2>
+<a name="dependencies" class="anchor" href="#dependencies"><span class="octicon octicon-link"></span></a>Dependencies</h2>
+
+<p>Smart Cache depends upon the following sub-packages of Mango-Pi.</p>
+
+<ul>
+<li><p>JMX Wrapper (by Udo Klimaschewski)</p></li>
+<li><p>Utils -&gt; MBeanService.java</p></li>
+</ul><h2>
+<a name="how-to-use" class="anchor" href="#how-to-use"><span class="octicon octicon-link"></span></a>How to use</h2>
+
+<ul>
+<li>Lets Define a custom data structure that we need to save in SmartCache (See the example)</li>
+</ul><p>SmartCacheData.java</p>
+
+<div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">SmartCacheData</span> <span class="kd">extends</span> <span class="n">SmartCachePojo</span> <span class="o">{</span>
+
+    <span class="kd">private</span> <span class="n">String</span> <span class="n">key</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="kt">byte</span><span class="o">[][]</span> <span class="n">data</span><span class="o">;</span>
+
+    <span class="kd">public</span> <span class="nf">SmartCacheData</span><span class="o">()</span> <span class="o">{</span>
+        <span class="kd">super</span><span class="o">();</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="nf">SmartCacheData</span><span class="o">(</span><span class="n">String</span> <span class="n">key</span><span class="o">,</span> <span class="kt">byte</span><span class="o">[][]</span> <span class="n">data</span><span class="o">)</span> <span class="o">{</span>
+         <span class="k">this</span><span class="o">.</span><span class="na">setKey</span><span class="o">(</span><span class="n">key</span><span class="o">);</span>
+         <span class="k">this</span><span class="o">.</span><span class="na">setData</span><span class="o">(</span><span class="n">data</span><span class="o">);</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+
+<ul>
+<li>Now lets Start the SmartCache service and insert data into the cache. We will also provide a callback method to SmartCache.</li>
+</ul><p>TestSmartCache.java</p>
+
+<div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">TestSmartCache</span> <span class="o">{</span>
+
+    <span class="kd">public</span> <span class="nf">TestSmartCache</span><span class="o">()</span> <span class="o">{</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="na">info</span><span class="o">(</span><span class="s">"Started with Test Smart Cache"</span><span class="o">);</span>
+
+        <span class="c1">// Instantiate the Smart Cache (Here we take advantage of the helper class DefaultSmartCache)</span>
+        <span class="kd">final</span> <span class="n">DefaultSmartCache</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">SmartCacheData</span><span class="o">,</span> <span class="n">MyCacheListener</span><span class="o">&gt;</span> <span class="n">mySmartCache</span> <span class="o">=</span>
+              <span class="k">new</span> <span class="n">DefaultSmartCache</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">SmartCacheData</span><span class="o">,</span> <span class="n">MyCacheListener</span><span class="o">&gt;();</span>
+
+        <span class="c1">// The Callback method which will be invoked by the Smart Cache when deleting an entry from the Cache</span>
+        <span class="c1">// This uses Java's Reflection API. Alternatively you can add SmartCacheEventListener to do the same job</span>
+        <span class="c1">// If you do not want the overhead of Reflection.</span>
+           <span class="n">Method</span> <span class="n">method</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+           <span class="k">try</span> <span class="o">{</span>
+               <span class="n">method</span> <span class="o">=</span> <span class="n">getClass</span><span class="o">().</span><span class="na">getDeclaredMethod</span><span class="o">(</span><span class="s">"callback"</span><span class="o">,</span> <span class="n">SmartCachePojo</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+           <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+               <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+           <span class="o">}</span>
+
+           <span class="c1">// Start the auto cleaner service with the callback method, as created above</span>
+           <span class="n">mySmartCache</span><span class="o">.</span><span class="na">startAutoCleaner</span><span class="o">(</span><span class="mi">200</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="mi">500</span><span class="o">,</span> <span class="n">TimeUnit</span><span class="o">.</span><span class="na">MILLISECONDS</span><span class="o">,</span> <span class="k">this</span><span class="o">,</span> <span class="n">method</span><span class="o">);</span>
+
+           <span class="c1">// Finally put the data into the Smart Cache</span>
+           <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">1000</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+                <span class="n">mySmartCache</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">"key"</span> <span class="o">+</span> <span class="n">i</span><span class="o">,</span> <span class="k">new</span> <span class="n">SmartCacheData</span><span class="o">(</span><span class="s">"DATA"</span> <span class="o">+</span> <span class="n">i</span><span class="o">,</span> <span class="n">createData</span><span class="o">(</span><span class="n">NUMBER_OF_CHUNKS</span><span class="o">,</span> <span class="n">CHUNK_SIZE</span><span class="o">)));</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+
+    <span class="c1">// This is your callback method. NOTE that it MUST take one argument of type V extends SmartCachePojo</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">callback</span><span class="o">(</span><span class="n">SmartCachePojo</span> <span class="n">data</span><span class="o">)</span> <span class="o">{</span>
+         <span class="n">logger</span><span class="o">.</span><span class="na">info</span><span class="o">(</span><span class="s">"Deleted Data which was created at: "</span> <span class="o">+</span> <span class="n">data</span><span class="o">.</span><span class="na">TIME_STAMP</span><span class="o">);</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+
+<ul>
+<li>Optionally, we can simply implement SmartCacheEventListener and get callbacks
+(this will not use Java Reflection API)</li>
+</ul><p>MyCacheListener.java</p>
+
+<div class="highlight"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">MyCacheListener</span> <span class="kd">implements</span> <span class="n">SmartCacheEventListener</span> <span class="o">{</span>
+
+     <span class="kd">public</span> <span class="nf">MyCacheListener</span><span class="o">()</span> <span class="o">{</span>
+        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"Added SmartCacheEventListener"</span><span class="o">);</span>
+     <span class="o">}</span>
+
+     <span class="nd">@Override</span>
+     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onCreateCacheEntry</span><span class="o">(</span><span class="n">SmartCachePojo</span> <span class="n">createdEntry</span><span class="o">)</span> <span class="o">{</span>
+         <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"Data Inserted into Cache: "</span> <span class="o">+</span> <span class="n">createdEntry</span><span class="o">.</span><span class="na">getTIME_STAMP</span><span class="o">());</span>
+     <span class="o">}</span>
+
+     <span class="nd">@Override</span>
+     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onDeleteCacheEntry</span><span class="o">(</span><span class="n">SmartCachePojo</span> <span class="n">deletedEntry</span><span class="o">)</span> <span class="o">{</span>
+         <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"Data Deleted from the Cache: "</span> <span class="o">+</span> <span class="n">deletedEntry</span><span class="o">.</span><span class="na">getTIME_STAMP</span><span class="o">());</span>
+     <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+
+<p>Now simply add the above listener to your Cache.</p>
+
+<p>TestSmartCache.java</p>
+
+<div class="highlight"><pre><span class="c1">// Instantiate the Smart Cache (Here we take advantage of the helper class DefaultSmartCache)</span>
+   <span class="kd">final</span> <span class="n">DefaultSmartCache</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">SmartCacheData</span><span class="o">,</span> <span class="n">MyCacheListener</span><span class="o">&gt;</span> <span class="n">mySmartCache</span> <span class="o">=</span>
+         <span class="k">new</span> <span class="n">DefaultSmartCache</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">SmartCacheData</span><span class="o">,</span> <span class="n">MyCacheListener</span><span class="o">&gt;();</span>
+
+<span class="c1">// Add an Event Listener to the Cache</span>
+<span class="n">mySmartCache</span><span class="o">.</span><span class="na">addSmartCacheEventsListener</span><span class="o">(</span><span class="k">new</span> <span class="n">MyCacheListener</span><span class="o">());</span>
+</pre></div>
+
+<p>If you want you can start the Auto Cleaner Service for with this Listener</p>
+
+<p>TestSmartCache.java</p>
+
+<div class="highlight"><pre><span class="c1">// Start the auto cleaner service</span>
+<span class="n">mySmartCache</span><span class="o">.</span><span class="na">startAutoCleaner</span><span class="o">(</span><span class="mi">200</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="mi">500</span><span class="o">,</span> <span class="n">TimeUnit</span><span class="o">.</span><span class="na">MILLISECONDS</span><span class="o">);</span>
+</pre></div>
+
+<p>You are all done!! Enjoy :)</p>
+        </section>
+
+        <aside id="sidebar">
+          <a href="https://github.com/sohailalam2/Mango-Pi/zipball/master" class="button">
+            <small>Download</small>
+            .zip file
+          </a>
+          <a href="https://github.com/sohailalam2/Mango-Pi/tarball/master" class="button">
+            <small>Download</small>
+            .tar.gz file
+          </a>
+
+          <p class="repo-owner"><a href="https://github.com/sohailalam2/Mango-Pi"></a> is maintained by <a href="https://github.com/sohailalam2">sohailalam2</a>.</p>
+
+          <p>This page was generated by <a href="pages.github.com">GitHub Pages</a> using the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+        </aside>
+      </div>
+    </div>
+
+  
+  </body>
+</html>
