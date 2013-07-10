@@ -15,10 +15,13 @@ public interface SmartCacheManagerMBean<K> {
 
     /**
      * This is just an Example MBean Name for the Smart Cache.
-     * Name Format: "MangoPI:Module=SmartCache-0/1/2/3..."
-     * here 0/1/2/3... are a numeric value for the MBean.
+     * Name Format: "MangoPI:Module=SmartCache-(THE UNIQUE NAME FOR THIS CACHE INSTANCE)".
+     * <p/>
+     * Here the Unique Name for this instance of the SmartCache is selected by the User,
+     * while instantiating the SmartCache using the {@link AbstractSmartCache},
+     * of any of the helper class that extends it, such as {@link DefaultSmartCache}.
      */
-    public static final String MBEAN_NAME = "MangoPI:Module=SmartCache-" + 0;
+    public static final String MBEAN_NAME = "MangoPI:Module=SmartCache-(THE UNIQUE NAME FOR THIS CACHE INSTANCE)";
 
     /**
      * Stop Smart Cache MBean service.
