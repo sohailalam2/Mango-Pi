@@ -63,15 +63,25 @@ public abstract class AbstractSmartCache<K, V extends SmartCachePojo> implements
     private final ConcurrentHashMap<K, V> SMART_CACHE_DATA;
     private final ExecutorService PURGE_EXECUTOR = Executors.newSingleThreadExecutor();
     private SmartCacheEventListener smartCacheEventListener = null;
+    private String cacheName = "SmartCache";
+    private static final ArrayList<String> UNIQUE_CACHE_NAMES = new ArrayList<String>();
 
     /**
      * Instantiates a new {@link DefaultSmartCache}
      *
+     * @param cacheName     the cache name (must be unique if more than one Smart Cache is instantiated in the application)
      * @param activateMBean This indicates whether to activate the SmartCache MBean.
      *
      * @throws SmartCacheException Throws any SmartCacheException whatsoever.
      */
-    public AbstractSmartCache(boolean activateMBean) throws SmartCacheException {
+    public AbstractSmartCache(String cacheName, boolean activateMBean) throws SmartCacheException {
+        this.cacheName = cacheName;
+        if (UNIQUE_CACHE_NAMES.contains(this.cacheName)) {
+            throw new SmartCacheException("The Smart Cache Name: '" + cacheName
+                    + "' is not unique, please select another name for this SmartCache instance");
+        } else {
+            UNIQUE_CACHE_NAMES.add(this.cacheName);
+        }
         SMART_CACHE_DATA = new ConcurrentHashMap<K, V>();
         if (activateMBean) {
             new SmartCacheManager<AbstractSmartCache, K, V>(this).startSmartCacheMBeanService();
@@ -307,14 +317,28 @@ public abstract class AbstractSmartCache<K, V extends SmartCachePojo> implements
         return purgeCacheEntry(keySet());
     }
 
+    public String getCacheName() {
+        return cacheName;
+    }
+
     private final class PurgerClass implements Runnable {
 
         Set<K> keys = keySet();
 
+        /**
+         * Instantiates a new Purger class.
+         *
+         * @param keys the keys
+         */
         public PurgerClass(Set<K> keys) {
             this.keys = keys;
         }
 
+        /**
+         * Instantiates a new Purger class.
+         *
+         * @param key the key
+         */
         public PurgerClass(K key) {
             keys = new HashSet<K>(1);
             keys.add(key);

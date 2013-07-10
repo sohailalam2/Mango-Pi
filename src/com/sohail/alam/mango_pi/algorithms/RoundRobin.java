@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Date: 11/6/13
  * Time: 8:10 AM
  */
-public class RoundRobin<K extends List, V> {
+public class RoundRobin<K extends List<V>, V> {
 
     // The counter for Round Robin
     private static AtomicInteger RRCounter = new AtomicInteger(0);
@@ -54,11 +54,12 @@ public class RoundRobin<K extends List, V> {
         if (list.isEmpty()) {
             return null;
         }
-        if (RRCounter.get() <= list.size()) {
-            selectedElement = (V) list.get(RRCounter.get());
+        if (RRCounter.get() < list.size()) {
+            selectedElement = list.get(RRCounter.get());
             RRCounter.set(RRCounter.incrementAndGet() % list.size());
         } else {
-            selectedElement = (V) list.get(RRCounter.decrementAndGet());
+            selectedElement = list.get(0);
+            RRCounter.set(0);
         }
         return selectedElement;
     }

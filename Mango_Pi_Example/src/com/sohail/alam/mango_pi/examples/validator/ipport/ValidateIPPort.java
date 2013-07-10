@@ -16,7 +16,7 @@
 
 package com.sohail.alam.mango_pi.examples.validator.ipport;
 
-import com.sohail.alam.mango_pi.validator.ipport.IPPort;
+import com.sohail.alam.mango_pi.validator.ipport.IPPortValidator;
 
 /**
  * User: Sohail Alam
@@ -29,17 +29,17 @@ public class ValidateIPPort {
     public static void main(String[] args) {
 
         // TRUE
-        System.out.println("Validate IP   Address => " + IPPort.validate().isValidIP("127.0.0.1"));
-        System.out.println("Validate IPv4 Address => " + IPPort.validate().isIPv4("127.0.0.1"));
-        System.out.println("Validate IPv6 Address => " + IPPort.validate().isIPv6("2001:0db8:0000:0000:0000:ff00:0042:8329"));
-        System.out.println("Validate IPv6 Address => " + IPPort.validate().isIPv6("2001:db8:0:0:0:ff00:42:8329"));
-        System.out.println("Validate IPv6 Address => " + IPPort.validate().isIPv6("2001:db8::ff00:42:8329"));
-        System.out.println("Validate IPv6 Address => " + IPPort.validate().isIPv6("0:0:0:0:0:0:0:1"));
-        System.out.println("Validate Port Number  => " + IPPort.validate().isValidPort(1234));
+        System.out.println("Validate IP   Address => " + IPPortValidator.validate().isValidIP("127.0.0.1"));
+        System.out.println("Validate IPv4 Address => " + IPPortValidator.validate().isIPv4("127.0.0.1"));
+        System.out.println("Validate IPv6 Address => " + IPPortValidator.validate().isIPv6("2001:0db8:0000:0000:0000:ff00:0042:8329"));
+        System.out.println("Validate IPv6 Address => " + IPPortValidator.validate().isIPv6("2001:db8:0:0:0:ff00:42:8329"));
+        System.out.println("Validate IPv6 Address => " + IPPortValidator.validate().isIPv6("2001:db8::ff00:42:8329"));
+        System.out.println("Validate IPv6 Address => " + IPPortValidator.validate().isIPv6("0:0:0:0:0:0:0:1"));
+        System.out.println("Validate Port Number  => " + IPPortValidator.validate().isValidPort(1234));
 
         // FALSE
-        System.out.println("Validate IPv6 Address => " + IPPort.validate().isIPv6("2001::1::3F"));
-        System.out.println("Validate Port Number  => " + IPPort.validate().isValidPort(0));
-        System.out.println("Validate Port Number  => " + IPPort.validate().isValidPort(65536));
+        System.out.println("Validate IPv6 Address => " + IPPortValidator.validate().isIPv6("2001::1::3F"));
+        System.out.println("Validate Port Number  => " + IPPortValidator.validate().isValidPort(0));
+        System.out.println("Validate Port Number  => " + IPPortValidator.validate().isValidPort(65536));
     }
 }

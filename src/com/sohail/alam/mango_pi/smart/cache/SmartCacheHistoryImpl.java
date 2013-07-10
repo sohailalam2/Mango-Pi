@@ -38,7 +38,11 @@ class SmartCacheHistoryImpl<K, V extends SmartCachePojo> implements SmartCacheHi
     @Override
     public void addToHistory(String reason, K key, V value) {
         if (SMART_CACHE_HISTORY.size() >= maxElementCount.get())
-            SMART_CACHE_HISTORY.clear();
+            try {
+                purgeHistory(null);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
         SMART_CACHE_HISTORY.put(key, new SmartCacheHistoryPojo<K, V>(reason, key, value));
     }

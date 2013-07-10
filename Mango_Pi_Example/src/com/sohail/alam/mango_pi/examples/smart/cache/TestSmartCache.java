@@ -86,7 +86,12 @@ public class TestSmartCache {
         // Instantiate the Smart Cache
         // (Here we take advantage of the helper class DefaultSmartCache)
         final DefaultSmartCache<String, SmartCacheData> mySmartCache =
-                new DefaultSmartCache<String, SmartCacheData>();
+                new DefaultSmartCache<String, SmartCacheData>("Test");
+
+        // This is just for testing the MBeans and Uniqueness of SmartCache names
+        // It will throw Exception if the names are same.
+        // final DefaultSmartCache<String, SmartCacheData> mySmartCache2 =
+        //         new DefaultSmartCache<String, SmartCacheData>("Test");
 
         // Add an Event Listener to the Cache
         mySmartCache.addSmartCacheEventsListener(new MyCacheListener());
@@ -108,7 +113,7 @@ public class TestSmartCache {
         // Instantiate the Smart Cache
         // (Here we take advantage of the helper class DefaultSmartCache)
         final DefaultSmartCache<String, SmartCacheData> mySmartCache =
-                new DefaultSmartCache<String, SmartCacheData>();
+                new DefaultSmartCache<String, SmartCacheData>("Test1");
 
         // The Callback method which will be invoked by the Smart Cache when deleting an entry from the Cache
         Method method = null;

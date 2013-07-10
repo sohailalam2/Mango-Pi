@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 /**
- * This {@link com.sohail.alam.mango_pi.validator.ipport.IPPort} class exposes the methods which can validate a given String to be an IP Address
+ * This {@link IPPortValidator} class exposes the methods which can validate a given String to be an IP Address
  * or an integer to be a valid Port number.
  * <p/>
  * User: Sohail Alam
@@ -28,7 +28,7 @@ import java.util.regex.PatternSyntaxException;
  * Date: 9/6/13
  * Time: 6:02 PM
  */
-public class IPPort {
+public class IPPortValidator {
 
     private final String IP_V4_REGEX = "(([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.){3}([01]?\\d\\d?|2[0-4]\\d|25[0-5])";
     private final String IP_V6_REGEX = "^([\\dA-F]{1,4}:|((?=.*(::))(?!.*\\3.+\\3))\\3?)([\\dA-F]{1,4}(\\3|:\\b)|\\2){5}(([\\dA-F]{1,4}(\\3|:\\b|$)|\\2){2}|(((2[0-4]|1\\d|[1-9])?\\d|25[0-5])\\.?\\b){4})\\z";
@@ -38,12 +38,12 @@ public class IPPort {
     /**
      * Private Constructor for Singleton Class
      */
-    private IPPort() throws PatternSyntaxException {
+    private IPPortValidator() throws PatternSyntaxException {
         VALID_IPV4_PATTERN = Pattern.compile(IP_V4_REGEX, Pattern.CASE_INSENSITIVE);
         VALID_IPV6_PATTERN = Pattern.compile(IP_V6_REGEX, Pattern.CASE_INSENSITIVE);
     }
 
-    public static IPPort validate() {
+    public static IPPortValidator validate() {
         return SingletonHolder.instance;
     }
 
@@ -156,7 +156,7 @@ public class IPPort {
         /**
          * The Instance.
          */
-        static IPPort instance = new IPPort();
+        static IPPortValidator instance = new IPPortValidator();
     }
 
 }

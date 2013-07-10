@@ -32,9 +32,8 @@ import java.util.concurrent.TimeUnit;
  * Time: 8:27 AM
  */
 @JMXBean(description = "Smart Cache MBean")
-public class SmartCacheManager<T extends SmartCache, K, V extends SmartCachePojo> implements SmartCacheManagerMBean<K> {
+public class SmartCacheManager<T extends AbstractSmartCache, K, V extends SmartCachePojo> implements SmartCacheManagerMBean<K> {
 
-    private static int mbeanCounter = 0;
     private static String MBEAN_NAME;
     private final SmartCacheHistory HISTORY = SmartCacheHistoryImpl.HISTORY;
     private SmartCache cache;
@@ -48,7 +47,7 @@ public class SmartCacheManager<T extends SmartCache, K, V extends SmartCachePojo
         if (cache == null)
             throw new NullPointerException("The Instance of the Cache can not be null");
 
-        MBEAN_NAME = "MangoPI:Module=SmartCache-" + mbeanCounter++;
+        MBEAN_NAME = "MangoPI:Module=SmartCache-" + cache.getCacheName();
         this.cache = cache;
     }
 

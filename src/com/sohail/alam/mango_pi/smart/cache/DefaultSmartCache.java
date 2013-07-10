@@ -32,7 +32,7 @@ import static com.sohail.alam.mango_pi.smart.cache.SmartCache.SmartCacheDeleteRe
  * {@link SmartCache#startAutoCleaner(long, long, long, java.util.concurrent.TimeUnit, Object, java.lang.reflect.Method)},
  * {@link SmartCache#startAutoCleaner(long, long, long, java.util.concurrent.TimeUnit, SmartCacheEventListener)}
  * methods, which checks the TTL value for each elements stored in the {@link SmartCache} and removes it
- * when expired. Also, {@link com.sohail.alam.mango_pi.smart.cache.SmartCache#stopAutoCleaner()} method is
+ * when expired. Also, {@link SmartCache#stopAutoCleaner()} method is
  * provided for you to cancel the Auto Cleaner Service when not needed.
  * </p>
  * <p>
@@ -55,9 +55,13 @@ public class DefaultSmartCache<K, V extends SmartCachePojo> extends AbstractSmar
 
     /**
      * Instantiates a new {@link DefaultSmartCache}
+     *
+     * @param cacheName the cache name (must be unique if more than one Smart Cache is instantiated in the application)
+     *
+     * @throws SmartCacheException the smart cache exception
      */
-    public DefaultSmartCache() throws SmartCacheException {
-        super(false);
+    public DefaultSmartCache(String cacheName) throws SmartCacheException {
+        super(cacheName, false);
         new SmartCacheManager<DefaultSmartCache, K, V>(this).startSmartCacheMBeanService();
     }
 
@@ -176,7 +180,7 @@ public class DefaultSmartCache<K, V extends SmartCachePojo> extends AbstractSmar
      * The Deleted Entries Counter increments whenever an item expires its TTL and is deleted from the
      * {@link SmartCache}.
      *
-     * @return The {@code long} value of {@code deletedEntriesCounter}
+     * @return The  value of
      */
     public long getDeletedEntriesCounter() {
         return deletedEntriesCounter.get();
