@@ -118,7 +118,7 @@ This helper class will clear the cache for you in background thread, according t
 
         <span class="c1">// Instantiate the Smart Cache (Here we take advantage of the helper class DefaultSmartCache)</span>
         <span class="kd">final</span> <span class="n">DefaultSmartCache</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">SmartCacheData</span><span class="o">,</span> <span class="n">MyCacheListener</span><span class="o">&gt;</span> <span class="n">mySmartCache</span> <span class="o">=</span>
-              <span class="k">new</span> <span class="n">DefaultSmartCache</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">SmartCacheData</span><span class="o">,</span> <span class="n">MyCacheListener</span><span class="o">&gt;();</span>
+              <span class="k">new</span> <span class="n">DefaultSmartCache</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">SmartCacheData</span><span class="o">,</span> <span class="n">MyCacheListener</span><span class="o">&gt;("MyCache");</span>
 
         <span class="c1">// The Callback method which will be invoked by the Smart Cache when deleting an entry from the Cache</span>
         <span class="c1">// This uses Java's Reflection API. Alternatively you can add SmartCacheEventListener to do the same job</span>
