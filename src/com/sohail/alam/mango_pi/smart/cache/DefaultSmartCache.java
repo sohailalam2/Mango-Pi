@@ -85,6 +85,7 @@ public class DefaultSmartCache<K, V extends SmartCachePojo> extends AbstractSmar
      * @return {@code true} if the Auto Cleaner Service was setup correctly, otherwise returns {@code false}
      */
     @Override
+    @Deprecated
     public boolean startAutoCleaner(long EXPIRY_DURATION, long START_TASK_DELAY, long REPEAT_TASK_DELAY, TimeUnit TIME_UNIT,
                                     final Object CALLBACK_CLASS_OBJECT, final Method CALLBACK_METHOD) throws SmartCacheException {
 
@@ -130,14 +131,49 @@ public class DefaultSmartCache<K, V extends SmartCachePojo> extends AbstractSmar
         return true;
     }
 
+    /**
+     * Sets up an Auto Cleaner Service which will delete entries from the {@link SmartCache} System on expiry of its TTL (time to live)
+     * <p/>
+     * <strong>NOTE:</strong>
+     * This method has been deprecated. It is HIGHLY RECOMMENDED that you use {@link SmartCache#startAutoCleaner()},
+     * or {@link SmartCache#startAutoCleaner(SmartCacheEventListener)} method to delete the specific entry corresponding to its TTL value.
+     *
+     * @param EXPIRY_DURATION         The TTL value after which the entries will be deleted from the Smart Cache
+     * @param START_TASK_DELAY        The initial delay after which this Auto Cleaner service starts
+     * @param REPEAT_TASK_DELAY       The delay after which this Auto Cleaner service repeats itself
+     * @param TIME_UNIT               The Unit of time for the previous parameters
+     * @param smartCacheEventListener the smart cache event listener
+     *
+     * @return if the Auto Cleaner Service was setup correctly, otherwise returns
+     *
+     * @throws SmartCacheException the smart cache exception
+     */
     @Override
+    @Deprecated
     public boolean startAutoCleaner(long EXPIRY_DURATION, long START_TASK_DELAY, long REPEAT_TASK_DELAY, TimeUnit TIME_UNIT, final SmartCacheEventListener smartCacheEventListener) throws SmartCacheException {
 
         this.addSmartCacheEventsListener(smartCacheEventListener);
         return startAutoCleaner(EXPIRY_DURATION, START_TASK_DELAY, REPEAT_TASK_DELAY, TIME_UNIT);
     }
 
+    /**
+     * Sets up an Auto Cleaner Service which will delete entries from the {@link SmartCache} System on expiry of its TTL (time to live)
+     * <p/>
+     * <strong>NOTE:</strong>
+     * This method has been deprecated. It is HIGHLY RECOMMENDED that you use {@link SmartCache#startAutoCleaner()},
+     * or {@link SmartCache#startAutoCleaner(SmartCacheEventListener)} method to delete the specific entry corresponding to its TTL value.
+     *
+     * @param EXPIRY_DURATION   The TTL value after which the entries will be deleted from the Smart Cache
+     * @param START_TASK_DELAY  The initial delay after which this Auto Cleaner service starts
+     * @param REPEAT_TASK_DELAY The delay after which this Auto Cleaner service repeats itself
+     * @param TIME_UNIT         The Unit of time for the previous parameters
+     *
+     * @return if the Auto Cleaner Service was setup correctly, otherwise returns
+     *
+     * @throws SmartCacheException the smart cache exception
+     */
     @Override
+    @Deprecated
     public boolean startAutoCleaner(long EXPIRY_DURATION, long START_TASK_DELAY, long REPEAT_TASK_DELAY, TimeUnit TIME_UNIT) throws SmartCacheException {
         final long expiry = TimeUnit.NANOSECONDS.convert(EXPIRY_DURATION, TIME_UNIT);
 
@@ -168,8 +204,12 @@ public class DefaultSmartCache<K, V extends SmartCachePojo> extends AbstractSmar
 
     /**
      * Stops the ongoing Auto Cleaner Service
+     * This method has been deprecated. It is HIGHLY RECOMMENDED to use the,
+     * {@link SmartCache#stopAllAutoCleaner(boolean)} ()} or
+     * the {@link SmartCache#stopAutoCleaner(Object, boolean)} methods.
      */
     @Override
+    @Deprecated
     public void stopAutoCleaner() throws SecurityException {
         if (autoCleanerService != null)
             autoCleanerService.shutdown();

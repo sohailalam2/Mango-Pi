@@ -56,7 +56,7 @@ public class TestSmartCache {
      *
      * @return a byte[][] containing the binary data
      */
-    private byte[][] createData(final int NUMBER_OF_CHUNKS, final int CHUNK_SIZE) {
+    public static byte[][] createData(final int NUMBER_OF_CHUNKS, final int CHUNK_SIZE) {
 
         byte[][] data = new byte[NUMBER_OF_CHUNKS][CHUNK_SIZE];
         for (int i = 0; i < NUMBER_OF_CHUNKS; i++) {

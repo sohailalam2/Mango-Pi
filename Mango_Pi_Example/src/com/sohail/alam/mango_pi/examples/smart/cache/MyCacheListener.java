@@ -19,6 +19,7 @@ package com.sohail.alam.mango_pi.examples.smart.cache;
 import com.sohail.alam.mango_pi.smart.cache.SmartCacheEventListener;
 import com.sohail.alam.mango_pi.smart.cache.SmartCachePojo;
 
+import java.util.Date;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -28,7 +29,7 @@ import java.util.logging.Logger;
  * Date: 4/7/13
  * Time: 11:04 PM
  */
-public class MyCacheListener implements SmartCacheEventListener {
+public class MyCacheListener<K, V extends SmartCachePojo> implements SmartCacheEventListener<K, V> {
 
     private final Logger LOGGER = Logger.getLogger(MyCacheListener.class.getName());
 
@@ -46,7 +47,7 @@ public class MyCacheListener implements SmartCacheEventListener {
      */
     @Override
     public void onCreateCacheEntry(Object key, SmartCachePojo createdEntry) {
-        LOGGER.info("Cache Entry was CREATED => Key: " + key + " Time: " + createdEntry.getTIME_STAMP());
+        LOGGER.info("Cache Entry was CREATED => Key: " + key + " Time: " + new Date(createdEntry.getTIME_STAMP()));
     }
 
     /**
@@ -59,7 +60,9 @@ public class MyCacheListener implements SmartCacheEventListener {
      */
     @Override
     public void onDeleteCacheEntry(Object key, SmartCachePojo deletedEntry) {
-        LOGGER.info("Cache Entry was DELETED => Key: " + key + " Time: " + deletedEntry.getTIME_STAMP());
+        LOGGER.info("Cache Entry was DELETED => Key: " + key
+                + " Creation Time: " + new Date(deletedEntry.getTIME_STAMP())
+                + " Deletion Time: " + new Date(System.currentTimeMillis()));
     }
 
     /**

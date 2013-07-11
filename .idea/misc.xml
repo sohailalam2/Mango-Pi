@@ -611,10 +611,6 @@
           </option>
         </TagSortingSetting>
         <TagSortingSetting>
-          <option name="mode" value="ARTIFACT" />
-          <option name="name" value="dependencies" />
-        </TagSortingSetting>
-        <TagSortingSetting>
           <option name="mode" value="FIXED" />
           <option name="name" value="pluginRepository" />
           <option name="order">
@@ -623,6 +619,10 @@
               <option value="url" />
             </list>
           </option>
+        </TagSortingSetting>
+        <TagSortingSetting>
+          <option name="mode" value="ARTIFACT" />
+          <option name="name" value="dependencies" />
         </TagSortingSetting>
         <TagSortingSetting>
           <option name="mode" value="FIXED" />
@@ -652,20 +652,20 @@
         </TagSortingSetting>
         <TagSortingSetting>
           <option name="mode" value="FIXED" />
-          <option name="name" value="profile" />
-          <option name="order">
-            <list>
-              <option value="id" />
-            </list>
-          </option>
-        </TagSortingSetting>
-        <TagSortingSetting>
-          <option name="mode" value="FIXED" />
           <option name="name" value="execution" />
           <option name="order">
             <list>
               <option value="id" />
               <option value="phase" />
+            </list>
+          </option>
+        </TagSortingSetting>
+        <TagSortingSetting>
+          <option name="mode" value="FIXED" />
+          <option name="name" value="profile" />
+          <option name="order">
+            <list>
+              <option value="id" />
             </list>
           </option>
         </TagSortingSetting>

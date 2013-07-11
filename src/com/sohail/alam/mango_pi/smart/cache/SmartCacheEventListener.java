@@ -31,7 +31,7 @@ import java.util.Map;
  * Date: 4/7/13
  * Time: 9:21 PM
  */
-public interface SmartCacheEventListener<K, V extends SmartCachePojo> {
+public interface SmartCacheEventListener<K, V> {
 
     /**
      * Event for On create cache entry.

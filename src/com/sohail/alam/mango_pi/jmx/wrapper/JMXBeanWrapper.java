@@ -465,7 +465,7 @@ public class JMXBeanWrapper implements DynamicMBean {
         for (Method method : beanClass.getMethods()) {
             JMXBeanAttribute jmxBeanAttribute = method
                     .getAnnotation(JMXBeanAttribute.class);
-			/*
+            /*
 			 * Skip attributes without annotation
 			 */
             if (jmxBeanAttribute == null) {

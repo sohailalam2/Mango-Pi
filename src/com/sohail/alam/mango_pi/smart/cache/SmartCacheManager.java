@@ -32,7 +32,7 @@ import java.util.concurrent.TimeUnit;
  * Time: 8:27 AM
  */
 @JMXBean(description = "Smart Cache MBean")
-public class SmartCacheManager<T extends AbstractSmartCache, K, V extends SmartCachePojo> implements SmartCacheManagerMBean<K> {
+public class SmartCacheManager<T extends AbstractSmartCache, K, V> implements SmartCacheManagerMBean<K> {
 
     private static String MBEAN_NAME;
     private final SmartCacheHistory HISTORY = SmartCacheHistoryImpl.HISTORY;
@@ -313,7 +313,11 @@ public class SmartCacheManager<T extends AbstractSmartCache, K, V extends SmartC
         Set<K> keySet = cache.keySet();
         for (K key : keySet) {
             V data = (V) cache.get(key);
-            buffer.append(String.format("%-20s", data.getTIME_STAMP()));
+            if (data instanceof SmartCachePojo) {
+                buffer.append(String.format("%-20s", ((SmartCachePojo) data).getTIME_STAMP()));
+            } else {
+                buffer.append(String.format("%-20s", "UNKNOWN"));
+            }
             buffer.append(String.format("%-50s", key.toString()));
             buffer.append(String.format("%-50s", data.toString()));
             buffer.append("\n");
@@ -340,7 +344,11 @@ public class SmartCacheManager<T extends AbstractSmartCache, K, V extends SmartC
         buffer.append("\n------------------------------------------------------------------------------------------\n");
         // Iterate the SmartCache for all keys
         V data = (V) cache.get(key);
-        buffer.append(String.format("%-20s", data.getTIME_STAMP()));
+        if (data instanceof SmartCachePojo) {
+            buffer.append(String.format("%-20s", ((SmartCachePojo) data).getTIME_STAMP()));
+        } else {
+            buffer.append(String.format("%-20s", "UNKNOWN"));
+        }
         buffer.append(String.format("%-20s", key.toString()));
         buffer.append(String.format("%-50s", data.toString()));
         buffer.append("\n------------------------------------------------------------------------------------------\n");
@@ -366,7 +374,11 @@ public class SmartCacheManager<T extends AbstractSmartCache, K, V extends SmartC
         // Iterate the SmartCache for all keys
         for (K key : keys) {
             V data = (V) cache.get(key);
-            buffer.append(String.format("%-20s", data.getTIME_STAMP()));
+            if (data instanceof SmartCachePojo) {
+                buffer.append(String.format("%-20s", ((SmartCachePojo) data).getTIME_STAMP()));
+            } else {
+                buffer.append(String.format("%-20s", "UNKNOWN"));
+            }
             buffer.append(String.format("%-20s", key.toString()));
             buffer.append(String.format("%-50s", data.toString()));
         }
