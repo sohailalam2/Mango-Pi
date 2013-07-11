@@ -70,8 +70,8 @@ public class TestSmartCache {
         logger.info("Started with Test Smart Cache");
 
         // Instantiate the Smart Cache (Here we take advantage of the helper class DefaultSmartCache)
-        final DefaultSmartCache<String, SmartCacheData, MyCacheListener> mySmartCache =
-              new DefaultSmartCache<String, SmartCacheData, MyCacheListener>("MyCache");
+        final DefaultSmartCache<String, SmartCacheData> mySmartCache =
+              new DefaultSmartCache<String, SmartCacheData>("MyCache");
 
         // The Callback method which will be invoked by the Smart Cache when deleting an entry from the Cache
         // This uses Java's Reflection API. Alternatively you can add SmartCacheEventListener to do the same job
@@ -129,8 +129,8 @@ TestSmartCache.java
 
 ```java
 // Instantiate the Smart Cache (Here we take advantage of the helper class DefaultSmartCache)
-   final DefaultSmartCache<String, SmartCacheData, MyCacheListener> mySmartCache =
-         new DefaultSmartCache<String, SmartCacheData, MyCacheListener>("MyCache");
+   final DefaultSmartCache<String, SmartCacheData> mySmartCache =
+         new DefaultSmartCache<String, SmartCacheData>("MyCache");
 
 // Add an Event Listener to the Cache
 mySmartCache.addSmartCacheEventsListener(new MyCacheListener());
