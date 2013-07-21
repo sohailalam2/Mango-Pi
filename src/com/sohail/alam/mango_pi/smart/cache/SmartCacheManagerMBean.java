@@ -18,8 +18,8 @@ public interface SmartCacheManagerMBean<K> {
      * Name Format: "MangoPI:Module=SmartCache-(THE UNIQUE NAME FOR THIS CACHE INSTANCE)".
      * <p/>
      * Here the Unique Name for this instance of the SmartCache is selected by the User,
-     * while instantiating the SmartCache using the {@link AbstractSmartCache},
-     * of any of the helper class that extends it, such as {@link DefaultSmartCache}.
+     * while instantiating the SmartCache using the {@link DefaultSmartCache},
+     * of any of the helper class that extends it, such as {@link DeprecatedSmartCache}.
      */
     public static final String MBEAN_NAME = "MangoPI:Module=SmartCache-(THE UNIQUE NAME FOR THIS CACHE INSTANCE)";
 
@@ -42,6 +42,7 @@ public interface SmartCacheManagerMBean<K> {
      *
      * @throws SmartCacheException the smart cache exception
      */
+    @Deprecated
     public boolean startAutoCleanerWithTimeUnit(final long EXPIRY_DURATION, final long START_TASK_DELAY, final long REPEAT_TASK_DELAY, final TimeUnit TIME_UNIT) throws SmartCacheException;
 
     /**
@@ -55,6 +56,7 @@ public interface SmartCacheManagerMBean<K> {
      *
      * @throws SmartCacheException the smart cache exception
      */
+    @Deprecated
     public boolean startAutoCleaner(final long EXPIRY_DURATION, final long START_TASK_DELAY, final long REPEAT_TASK_DELAY) throws SmartCacheException;
 
     /**
@@ -71,11 +73,13 @@ public interface SmartCacheManagerMBean<K> {
      *
      * @throws SmartCacheException the smart cache exception
      */
+    @Deprecated
     public boolean startAutoCleanerReflection(final long EXPIRY_DURATION, final long START_TASK_DELAY, final long REPEAT_TASK_DELAY, final TimeUnit TIME_UNIT, final Object CALLBACK_CLASS_OBJECT, final Method CALLBACK_METHOD) throws SmartCacheException;
 
     /**
      * Stop auto cleaner.
      */
+    @Deprecated
     public void stopAutoCleaner();
 
     /**
@@ -90,6 +94,7 @@ public interface SmartCacheManagerMBean<K> {
      *
      * @throws SmartCacheException the smart cache exception
      */
+    @Deprecated
     public boolean rescheduleAutoCleanerWithTimeUnit(final long EXPIRY_DURATION, final long START_TASK_DELAY, final long REPEAT_TASK_DELAY, final TimeUnit TIME_UNIT) throws SmartCacheException;
 
     /**
@@ -103,6 +108,7 @@ public interface SmartCacheManagerMBean<K> {
      *
      * @throws SmartCacheException the smart cache exception
      */
+    @Deprecated
     public boolean rescheduleAutoCleaner(final long EXPIRY_DURATION, final long START_TASK_DELAY, final long REPEAT_TASK_DELAY) throws SmartCacheException;
 
     /**
@@ -119,6 +125,7 @@ public interface SmartCacheManagerMBean<K> {
      *
      * @throws SmartCacheException the smart cache exception
      */
+    @Deprecated
     public boolean rescheduleAutoCleanerReflection(final long EXPIRY_DURATION, final long START_TASK_DELAY, final long REPEAT_TASK_DELAY, final TimeUnit TIME_UNIT, final Object CALLBACK_CLASS_OBJECT, final Method CALLBACK_METHOD) throws SmartCacheException;
 
     /**

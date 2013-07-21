@@ -255,8 +255,8 @@ public interface SmartCache<K, V> {
     /**
      * Stops the ongoing Auto Cleaner Service for the Cache data corresponding to a specific key.
      * This only works if you the Cache entries were made using the methods:
-     * {@link SmartCache#put(Object, Object, int, java.util.concurrent.TimeUnit)} and
-     * {@link SmartCache#put(Object, Object, int)} methods.
+     * {@link SmartCache#put(Object, Object, int)} and
+     * {@link SmartCache#put(Object, Object, int, java.util.concurrent.TimeUnit)} methods.
      * Also, the autoCleaner for this purpose must have been initiated using the one of the following methods:
      * {@link SmartCache#startAutoCleaner()} or
      * {@link SmartCache#startAutoCleaner(SmartCacheEventListener)}.
@@ -270,8 +270,8 @@ public interface SmartCache<K, V> {
     /**
      * Stops the ongoing Auto Cleaner Service for the Cache data corresponding to all keys.
      * This only works if you the Cache entries were made using the methods:
-     * {@link SmartCache#put(Object, Object, int, java.util.concurrent.TimeUnit)} and
-     * {@link SmartCache#put(Object, Object, int)} methods.
+     * {@link SmartCache#put(Object, Object, int)} and
+     * {@link SmartCache#put(Object, Object, int, java.util.concurrent.TimeUnit)} methods.
      * Also, the autoCleaner for this purpose must have been initiated using the one of the following methods:
      * {@link SmartCache#startAutoCleaner()} or
      * {@link SmartCache#startAutoCleaner(SmartCacheEventListener)}.
@@ -303,12 +303,12 @@ public interface SmartCache<K, V> {
      *
      * @return the <code>true</code> if everything goes fine else <code>false</code>.
      */
-    public boolean purgeCacheEntries();
+    public boolean purgeAllCacheEntries();
 
     /**
      * Purges only the data corresponding to the given KEY.
      * Invoking this method will give a callback to the
-     * {@link SmartCacheEventListener#onSingleEntryPurge(Object, SmartCachePojo)}.
+     * {@link SmartCacheEventListener#onSingleEntryPurge(Object, Object)}.
      *
      * @param key the KEY
      *
@@ -325,7 +325,7 @@ public interface SmartCache<K, V> {
      *
      * @return the boolean
      */
-    public boolean purgeCacheEntry(Set<K> keys);
+    public boolean purgeCacheEntries(Set<K> keys);
 
     /**
      * The interface containing some of the possible reasons for deleting the Cache entry

@@ -33,18 +33,24 @@ class SmartCacheHistoryPojo<K, V extends SmartCachePojo> {
     public String SMART_CACHE_DATA_NAME;
 
     /**
+     * This holds tha total size of the data corresponding to the given key
+     */
+    public long DATA_SIZE;
+
+    /**
      * Instantiates a new Smart cache history pojo.
      *
+     * @param creationTime the creation time
      * @param deleteReason the delete reason
      * @param key          the key
-     * @param creationTime the creation time
      */
-    public SmartCacheHistoryPojo(String deleteReason, K key, long creationTime) {
+    public SmartCacheHistoryPojo(long creationTime, String deleteReason, K key, long dataSize) {
         this.CREATION_TIME = (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")).format(new Date(creationTime));
         this.DELETE_REASON = deleteReason;
         this.DELETION_TIME = (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")).format(new Date(System.currentTimeMillis()));
         this.KEY = key;
         this.SMART_CACHE_DATA_NAME = "";
+        this.DATA_SIZE = dataSize;
     }
 
     /**
@@ -55,11 +61,12 @@ class SmartCacheHistoryPojo<K, V extends SmartCachePojo> {
      * @param pojo         the pojo
      */
     public SmartCacheHistoryPojo(String deleteReason, K key, V pojo) {
-        this.CREATION_TIME = (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")).format(new Date(pojo.getTIME_STAMP()));
+        this.CREATION_TIME = (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")).format(new Date(pojo.getCREATION_TIME()));
         this.DELETE_REASON = deleteReason;
         this.DELETION_TIME = (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")).format(new Date(System.currentTimeMillis()));
         this.KEY = key;
         this.SMART_CACHE_DATA_NAME = pojo.SMART_CACHE_DATA_NAME;
+        this.DATA_SIZE = pojo.size();
     }
 
 }

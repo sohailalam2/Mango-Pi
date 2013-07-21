@@ -7,18 +7,21 @@ in-memory caching system. There are basically four components to this SmartCache
     * Declaring all the methods that the SmartCache module supports
 
 * AbstractSmartCache        (Abstract Class)
-    * An abstract class that defines all of the SmartCache methods, except the 'startAutoCleaner' and 'stopAutoCleaner' methods.
+    * An abstract class that defines all of the SmartCache methods, except the deprecated
+    'startAutoCleaner' and 'stopAutoCleaner' methods.
+    The AbstractSmartCache implements methods for auto cleanup of the Cache entries,
+    provided they were inserted using the new 'put' methods that are not deprecated.
     To make things easy for you, AbstractSmartCache overrides the 'startAutoCleaner()' method which
     uses Java's Reflection API, but only returns 'false'. This was done to make it easy for you to
     extend the AbstractSmartCache. If you need Reflection, simply override this method.
 
-* SmartCachePojo            (Class)
-    * A class that the SmartCache module uses in order to find out the creation time of the cache,
-    also stores a unique name for this instance of Cache (which you can configure).
-
 * SmartCacheEventListener   (Interface)
     * An interface which contains the events signature. You can add Listener to your cache to be
     notified when an event occurs, such as when an item is added or removed from the cache.
+
+* SmartCachePojo            (Class)    DEPRECATED CLASS
+    * A class that the SmartCache module uses in order to find out the creation time of the cache,
+    also stores a unique name for this instance of Cache (which you can configure).
 
 There is also a 'DefaultSmartCache' helper class which implements all the methods of 'SmartCache' interface.
 This helper class will clear the cache for you in background thread, according to the TTL value that you set for the cache elements.

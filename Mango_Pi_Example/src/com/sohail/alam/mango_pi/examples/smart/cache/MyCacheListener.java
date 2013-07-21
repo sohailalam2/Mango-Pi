@@ -47,7 +47,7 @@ public class MyCacheListener<K, V extends SmartCachePojo> implements SmartCacheE
      */
     @Override
     public void onCreateCacheEntry(Object key, SmartCachePojo createdEntry) {
-        LOGGER.info("Cache Entry was CREATED => Key: " + key + " Time: " + new Date(createdEntry.getTIME_STAMP()));
+        LOGGER.info("Cache Entry was CREATED => Key: " + key + " Time: " + new Date(createdEntry.getCREATION_TIME()));
     }
 
     /**
@@ -57,11 +57,15 @@ public class MyCacheListener<K, V extends SmartCachePojo> implements SmartCacheE
      *
      * @param key          the key
      * @param deletedEntry the entry which was deleted from the Cache
+     * @param reason       the reason for which the cache entry was deleted.
+     *                     This may contain one of the values present in
+     *                     {@link com.sohail.alam.mango_pi.smart.cache.SmartCache.SmartCacheDeleteReason}
+     *                     interface, or any other set by the user.
      */
     @Override
-    public void onDeleteCacheEntry(Object key, SmartCachePojo deletedEntry) {
-        LOGGER.info("Cache Entry was DELETED => Key: " + key
-                + " Creation Time: " + new Date(deletedEntry.getTIME_STAMP())
+    public void onDeleteCacheEntry(K key, V deletedEntry, String reason) {
+        LOGGER.info("Cache Entry was DELETED due to Reason: " + reason + " => Key: " + key
+                + " Creation Time: " + new Date(deletedEntry.getCREATION_TIME())
                 + " Deletion Time: " + new Date(System.currentTimeMillis()));
     }
 
@@ -75,7 +79,7 @@ public class MyCacheListener<K, V extends SmartCachePojo> implements SmartCacheE
      */
     @Override
     public void onSingleEntryPurge(Object key, SmartCachePojo purgedElement) {
-        LOGGER.info("Cache Entry was PURGED => Key: " + key + " Time: " + purgedElement.getTIME_STAMP());
+        LOGGER.info("Cache Entry was PURGED => Key: " + key + " Time: " + purgedElement.getCREATION_TIME());
     }
 
     /**

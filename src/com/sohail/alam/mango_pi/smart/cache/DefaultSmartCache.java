@@ -16,18 +16,30 @@
 
 package com.sohail.alam.mango_pi.smart.cache;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static com.sohail.alam.mango_pi.smart.cache.SmartCache.SmartCacheDeleteReason.EXPIRED;
+import static com.sohail.alam.mango_pi.smart.cache.SmartCache.SmartCacheDeleteReason.PURGED;
+import static com.sohail.alam.mango_pi.smart.cache.SmartCacheHistoryImpl.SMART_CACHE_HISTORY;
 
 /**
  * <p>
- * this concrete class {@link DefaultSmartCache} extends {@link AbstractSmartCache} and
+ * The heart of {@link SmartCache} implementation with this class {@link DefaultSmartCache},
+ * lies in the {@link ConcurrentMap} Data Structure provided by the
+ * {@link java.util.concurrent} package.
+ * The difference in what {@link SmartCache} and {@link ConcurrentMap}
+ * does is that, {@link SmartCache} goes a little further and provide you with a
+ * solution to automatically delete entries from the {@link ConcurrentMap} Data Structure when the
+ * Time To Live (TTL) for that entry expires, and fire events when something happens, like when
+ * entries are deleted from the Cache. Also it provides you various other management and
+ * statistics capabilities.
+ * </p>
+ * <p>
+ * Any concrete class, such as {@link DeprecatedSmartCache} that extends {@link DefaultSmartCache}
  * implements the {@link SmartCache#startAutoCleaner(long, long, long, java.util.concurrent.TimeUnit)},
  * {@link SmartCache#startAutoCleaner(long, long, long, java.util.concurrent.TimeUnit, Object, java.lang.reflect.Method)},
  * {@link SmartCache#startAutoCleaner(long, long, long, java.util.concurrent.TimeUnit, SmartCacheEventListener)}
@@ -37,183 +49,462 @@ import static com.sohail.alam.mango_pi.smart.cache.SmartCache.SmartCacheDeleteRe
  * </p>
  * <p>
  * But in order for this to work, your Data Structure must implement the {@link SmartCachePojo}, which
- * automatically sets a creation time {@link SmartCachePojo#TIME_STAMP}, which is then checked against the
+ * automatically sets a creation time {@link SmartCachePojo#CREATION_TIME}, which is then checked against the
  * current time and the TTL value that you should have entered while enabling the
- * {@link SmartCache#startAutoCleaner(long, long, long, java.util.concurrent.TimeUnit, Object, java.lang.reflect.Method)}.
+ * {@link SmartCache#startAutoCleaner(long, long, long, java.util.concurrent.TimeUnit)}.
+ * </p>
+ * <p>
+ * Alternatively you may choose to extend this abstract class {@link DefaultSmartCache} and
+ * write your own logic for automatically cleaning/deleting entries from the map. Or you may choose
+ * to persist the data into a database, when its TTL expires.
  * </p>
  * User: Sohail Alam
  * Version: 1.1.6
  * Date: 9/6/13
- * Time: 12:27 AM
+ * Time: 1:14 AM
  */
-public class DefaultSmartCache<K, V extends SmartCachePojo> extends AbstractSmartCache<K, V> {
+public class DefaultSmartCache<K, V extends SmartCachePojo> implements SmartCache<K, V> {
 
-    private Executors autoCleanerExecutor;
-    private ScheduledExecutorService autoCleanerService = null;
-    private AtomicLong deletedEntriesCounter = new AtomicLong(0);
+    private static final ArrayList<String> UNIQUE_CACHE_NAMES = new ArrayList<String>();
+    private final ConcurrentHashMap<K, V> SMART_CACHE_DATA;
+    private final ConcurrentHashMap<K, ScheduledFuture<V>> TASK_HOLDER;
+    private final ConcurrentHashMap<K, ConcurrentHashMap<String, Object>> NON_SCHEDULED_TASKS;
+    private final ScheduledThreadPoolExecutor TASK_EXECUTOR;
+    private final ExecutorService PURGE_EXECUTOR;
     private SmartCacheEventListener smartCacheEventListener = null;
+    private String cacheName = "SmartCache";
+    private boolean startAutoCleaner = false;
+    private AtomicInteger canceledTasks;
+    private AtomicLong totalCacheSize;
+    private AtomicLong deletedEntriesCounter;
 
     /**
      * Instantiates a new {@link DefaultSmartCache}
      *
-     * @param cacheName the cache name (must be unique if more than one Smart Cache is instantiated in the application)
+     * @param cacheName     the cache name (must be unique if more than one Smart Cache
+     *                      is instantiated in the application)
+     * @param activateMBean This indicates whether to activate the SmartCache MBean.
      *
-     * @throws SmartCacheException the smart cache exception
+     * @throws SmartCacheException Throws any SmartCacheException whatsoever.
      */
-    public DefaultSmartCache(String cacheName) throws SmartCacheException {
-        super(cacheName, false);
-        new SmartCacheManager<DefaultSmartCache, K, V>(this).startSmartCacheMBeanService();
-    }
-
-    @Override
-    public void addSmartCacheEventsListener(SmartCacheEventListener events) {
-        super.addSmartCacheEventsListener(events);
-        smartCacheEventListener = events;
+    public DefaultSmartCache(String cacheName, boolean activateMBean) throws SmartCacheException {
+        this.cacheName = cacheName;
+        if (UNIQUE_CACHE_NAMES.contains(this.cacheName)) {
+            throw new SmartCacheException("The Smart Cache Name: '" + cacheName
+                    + "' is not unique, please select another name for this SmartCache instance");
+        } else {
+            UNIQUE_CACHE_NAMES.add(this.cacheName);
+        }
+        SMART_CACHE_DATA = new ConcurrentHashMap<K, V>();
+        TASK_HOLDER = new ConcurrentHashMap<K, ScheduledFuture<V>>();
+        TASK_EXECUTOR = new ScheduledThreadPoolExecutor(Runtime.getRuntime().availableProcessors());
+        NON_SCHEDULED_TASKS = new ConcurrentHashMap<K, ConcurrentHashMap<String, Object>>();
+        PURGE_EXECUTOR = Executors.newSingleThreadExecutor();
+        canceledTasks = new AtomicInteger(0);
+        totalCacheSize = new AtomicLong(0);// This represents the total size of the Cache in bytes
+        deletedEntriesCounter = new AtomicLong(0);
+        if (activateMBean) {
+            new SmartCacheManager<DefaultSmartCache, K, V>(this).startSmartCacheMBeanService();
+        }
     }
 
     /**
-     * Sets up an Auto Cleaner Service which will delete entries from the {@link com.sohail.alam.mango_pi.smart.cache.SmartCache} System on expiry of its TTL (time to live)
+     * Checks whether the {@link com.sohail.alam.mango_pi.smart.cache.SmartCache} is empty.
      *
-     * @param EXPIRY_DURATION       The TTL value after which the entries will be deleted from the Smart Cache
-     * @param START_TASK_DELAY      The initial delay after which this Auto Cleaner service starts
-     * @param REPEAT_TASK_DELAY     The delay after which this Auto Cleaner service repeats itself
-     * @param TIME_UNIT             The Unit of time for the previous parameters
-     * @param CALLBACK_CLASS_OBJECT The Class Object which contains the callback method, if {@code null} then no callback is made
-     * @param CALLBACK_METHOD       The callback method, if null then no callback is provided.
-     *                              NOTE: The Callback method must accept only one parameter of type {@code V extends SmartCachePojo}
+     * @return {@code true} if empty, otherwise {@code false}
+     */
+    @Override
+    public boolean isEmpty() {
+        return SMART_CACHE_DATA.isEmpty();
+    }
+
+    /**
+     * Checks whether the specified key is associated with any value in the {@link com.sohail.alam.mango_pi.smart.cache.SmartCache}
      *
-     * @return {@code true} if the Auto Cleaner Service was setup correctly, otherwise returns {@code false}
+     * @param key The Key of type {@link K}
+     *
+     * @return {@code true} if present, otherwise {@code false}
+     */
+    @Override
+    public boolean containsKey(K key) throws NullPointerException {
+        return SMART_CACHE_DATA.containsKey(key);
+    }
+
+    /**
+     * Checks whether the specified value is associated with any key in the {@link com.sohail.alam.mango_pi.smart.cache.SmartCache}
+     *
+     * @param value The Key of type {@link V}
+     *
+     * @return {@code true} if present, otherwise {@code false}
+     */
+    @Override
+    public boolean containsValue(V value) throws NullPointerException {
+        return SMART_CACHE_DATA.containsValue(value);
+    }
+
+    /**
+     * Put the Data of type {@link V} into the {@link com.sohail.alam.mango_pi.smart.cache.SmartCache}, corresponding to the Key of type {@link K}
+     *
+     * @param key  Any Key of type {@link K}
+     * @param data Any Data of type {@link V}
      */
     @Override
     @Deprecated
-    public boolean startAutoCleaner(long EXPIRY_DURATION, long START_TASK_DELAY, long REPEAT_TASK_DELAY, TimeUnit TIME_UNIT,
-                                    final Object CALLBACK_CLASS_OBJECT, final Method CALLBACK_METHOD) throws SmartCacheException {
-
-        final long expiry = TimeUnit.NANOSECONDS.convert(EXPIRY_DURATION, TIME_UNIT);
-
-        if (autoCleanerService == null) {
-            autoCleanerService = autoCleanerExecutor.newSingleThreadScheduledExecutor();
-        } else {
-            throw new SmartCacheException("Auto Cleaner for this Cache has already been started!");
-        }
-
-        final SmartCacheException[] anyException = new SmartCacheException[1];
-
-        autoCleanerService.scheduleAtFixedRate(new Runnable() {
-            @Override
-            public void run() {
-                for (K key : keySet()) {
-                    if ((System.nanoTime() - get(key).getTIME_STAMP()) >= expiry) {
-                        // Increment the deletedEntriesCounter
-                        deletedEntriesCounter.incrementAndGet();
-                        // Delete and Provide Callback if needed
-                        if (CALLBACK_CLASS_OBJECT != null && CALLBACK_METHOD != null) {
-                            try {
-                                CALLBACK_METHOD.invoke(CALLBACK_CLASS_OBJECT, remove(key, EXPIRED));
-                            } catch (IllegalAccessException e) {
-                                anyException[0] = new SmartCacheException("IllegalAccessException: " + e.getMessage(), e);
-                                break;
-                            } catch (InvocationTargetException e) {
-                                anyException[0] = new SmartCacheException("InvocationTargetException: " + e.getMessage(), e);
-                                break;
-                            }
-                        } else {
-                            remove(key, EXPIRED);
-                        }
-                    }
-                }
-            }
-        }, START_TASK_DELAY, REPEAT_TASK_DELAY, TIME_UNIT);
-
-        if (anyException[0] != null) {
-            throw anyException[0];
-        }
-        return true;
+    public void put(K key, V data) throws NullPointerException {
+        SMART_CACHE_DATA.put(key, data);
+        incrementTotalCacheSize(data.size());
+        if (smartCacheEventListener != null)
+            smartCacheEventListener.onCreateCacheEntry(key, data);
     }
 
     /**
-     * Sets up an Auto Cleaner Service which will delete entries from the {@link SmartCache} System on expiry of its TTL (time to live)
-     * <p/>
-     * <strong>NOTE:</strong>
-     * This method has been deprecated. It is HIGHLY RECOMMENDED that you use {@link SmartCache#startAutoCleaner()},
-     * or {@link SmartCache#startAutoCleaner(SmartCacheEventListener)} method to delete the specific entry corresponding to its TTL value.
+     * Put the Data of type {@link V} into the {@link com.sohail.alam.mango_pi.smart.cache.SmartCache}, corresponding to the Key of type {@link K}
      *
-     * @param EXPIRY_DURATION         The TTL value after which the entries will be deleted from the Smart Cache
-     * @param START_TASK_DELAY        The initial delay after which this Auto Cleaner service starts
-     * @param REPEAT_TASK_DELAY       The delay after which this Auto Cleaner service repeats itself
-     * @param TIME_UNIT               The Unit of time for the previous parameters
+     * @param key      Any Key of type
+     * @param data     Any Data of type
+     * @param ttl      the ttl value - The after which data will be auto deleted from the Cache
+     * @param timeUnit the time unit for the TTL Value
+     */
+    @Override
+    public void put(K key, V data, int ttl, TimeUnit timeUnit) {
+        SMART_CACHE_DATA.put(key, data);
+        incrementTotalCacheSize(data.size());
+        if (startAutoCleaner)
+            TASK_HOLDER.put(key, TASK_EXECUTOR.schedule(new AutoCleanerTask(key), ttl, timeUnit));
+        else {
+            ConcurrentHashMap<String, Object> temp = new ConcurrentHashMap<String, Object>();
+            temp.put("TTL", ttl);
+            temp.put("TIME_UNIT", timeUnit);
+            temp.put("CURRENT_NANO", System.nanoTime());
+            NON_SCHEDULED_TASKS.put(key, temp);
+        }
+        if (smartCacheEventListener != null)
+            smartCacheEventListener.onCreateCacheEntry(key, data);
+    }
+
+    /**
+     * Put the Data of type {@link V} into the
+     * {@link com.sohail.alam.mango_pi.smart.cache.SmartCache},
+     * corresponding to the Key of type {@link K}
+     *
+     * @param key  Any Key of type {@link K}
+     * @param data Any Data of type {@link V}
+     * @param ttl  the ttl value - The after which data will be auto deleted from the Cache
+     *             The Time Unit for this TTL Value defaults to Seconds.
+     */
+    @Override
+    public void put(K key, V data, int ttl) throws NullPointerException {
+        put(key, data, ttl, TimeUnit.SECONDS);
+    }
+
+    /**
+     * Get the Data corresponding to the given Key from the
+     * {@link com.sohail.alam.mango_pi.smart.cache.SmartCache}
+     *
+     * @param key The Key of type {@link K}
+     *
+     * @return The Data of type {@link V}
+     */
+    @Override
+    public V get(K key) throws NullPointerException {
+        return SMART_CACHE_DATA.get(key);
+    }
+
+    /**
+     * Removes the Data corresponding to the given Key from the {@link com.sohail.alam.mango_pi.smart.cache.SmartCache}
+     *
+     * @param key    The Key of type
+     * @param reason the reason
+     *
+     * @return The Data of type
+     *         that was removed
+     */
+    @Override
+    public V remove(K key, String reason) {
+        V data;
+        if ((data = SMART_CACHE_DATA.remove(key)) != null) {
+            decrementTotalCacheSize(data.size());
+            deletedEntriesCounter.incrementAndGet();
+            SMART_CACHE_HISTORY.addToHistory(reason, key, data);
+            if (smartCacheEventListener != null)
+                smartCacheEventListener.onDeleteCacheEntry(key, data, reason);
+            return data;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Puts an entire Map into the {@link com.sohail.alam.mango_pi.smart.cache.SmartCache}
+     *
+     * @param dataMap Map of type {@link java.util.concurrent.ConcurrentMap} having Key of type {@link K} and Data of type {@link V}
+     */
+    @Override
+    @Deprecated
+    public void putAll(ConcurrentMap<K, V> dataMap) {
+        SMART_CACHE_DATA.putAll(dataMap);
+        for (K key : dataMap.keySet()) {
+            incrementTotalCacheSize(dataMap.get(key).size());
+            if (smartCacheEventListener != null)
+                smartCacheEventListener.onCreateCacheEntry(key, dataMap.get(key));
+        }
+    }
+
+    /**
+     * Gets an entire Map from the {@link com.sohail.alam.mango_pi.smart.cache.SmartCache}
+     *
+     * @return dataMap Map of type {@link java.util.concurrent.ConcurrentMap} having Key of type {@link K} and Data of type {@link V}
+     */
+    @Override
+    public ConcurrentMap<K, V> getAll() {
+
+        return SMART_CACHE_DATA;
+    }
+
+    /**
+     * Removes an entire Map from the {@link com.sohail.alam.mango_pi.smart.cache.SmartCache} and returns it
+     *
+     * @return dataMap Map of type {@link java.util.concurrent.ConcurrentMap} having Key of type {@link K} and Data of type {@link V}
+     */
+    @Override
+    public ConcurrentMap<K, V> removeAll(String reason) {
+
+        ConcurrentMap<K, V> tempData = new ConcurrentHashMap<K, V>();
+        tempData.putAll(SMART_CACHE_DATA);
+        for (K key : keySet()) {
+            decrementTotalCacheSize(get(key).size());
+            remove(key, reason);
+        }
+        return tempData;
+    }
+
+    /**
+     * Returns a Set view of the keys contained in this map.
+     * The set is backed by the map, so changes to the map are reflected in the set, and vice-versa.
+     * The set supports element removal, which removes the corresponding mapping from this map,
+     * via the Iterator.remove, Set.remove, removeAll, retainAll, and clear operations.
+     * It does not support the add or addAll operations.
+     *
+     * @return A set view of the keys contained in this map
+     */
+    @Override
+    public Set<K> keySet() {
+        return SMART_CACHE_DATA.keySet();
+    }
+
+    /**
+     * Returns a Collection view of the values contained in this map.
+     * The collection is backed by the map, so changes to the map are reflected in the collection,
+     * and vice-versa. The collection supports element removal,
+     * which removes the corresponding mapping from this map, via the Iterator.remove,
+     * Collection.remove, removeAll, retainAll, and clear operations.
+     * It does not support the add or addAll operations.
+     *
+     * @return A Collection view of the values contained in this map
+     */
+    @Override
+    public Collection<V> values() {
+        return SMART_CACHE_DATA.values();
+    }
+
+    /**
+     * Get the number of key-value mappings in this map.
+     * If the map contains more than Integer.MAX_VALUE elements, returns Integer.MAX_VALUE.
+     *
+     * @return The number of key-value mappings in this map
+     */
+    @Override
+    public int size() {
+        return SMART_CACHE_DATA.size();
+    }
+
+    /**
+     * Add smart cache events listener.
+     *
      * @param smartCacheEventListener the smart cache event listener
-     *
-     * @return if the Auto Cleaner Service was setup correctly, otherwise returns
-     *
-     * @throws SmartCacheException the smart cache exception
      */
     @Override
-    @Deprecated
-    public boolean startAutoCleaner(long EXPIRY_DURATION, long START_TASK_DELAY, long REPEAT_TASK_DELAY, TimeUnit TIME_UNIT, final SmartCacheEventListener smartCacheEventListener) throws SmartCacheException {
-
-        this.addSmartCacheEventsListener(smartCacheEventListener);
-        return startAutoCleaner(EXPIRY_DURATION, START_TASK_DELAY, REPEAT_TASK_DELAY, TIME_UNIT);
+    public void addSmartCacheEventsListener(SmartCacheEventListener smartCacheEventListener) {
+        this.smartCacheEventListener = smartCacheEventListener;
     }
 
     /**
-     * Sets up an Auto Cleaner Service which will delete entries from the {@link SmartCache} System on expiry of its TTL (time to live)
-     * <p/>
-     * <strong>NOTE:</strong>
-     * This method has been deprecated. It is HIGHLY RECOMMENDED that you use {@link SmartCache#startAutoCleaner()},
-     * or {@link SmartCache#startAutoCleaner(SmartCacheEventListener)} method to delete the specific entry corresponding to its TTL value.
-     *
-     * @param EXPIRY_DURATION   The TTL value after which the entries will be deleted from the Smart Cache
-     * @param START_TASK_DELAY  The initial delay after which this Auto Cleaner service starts
-     * @param REPEAT_TASK_DELAY The delay after which this Auto Cleaner service repeats itself
-     * @param TIME_UNIT         The Unit of time for the previous parameters
-     *
-     * @return if the Auto Cleaner Service was setup correctly, otherwise returns
-     *
-     * @throws SmartCacheException the smart cache exception
+     * Nothing to do here!! Only returns <code>false</code>
      */
     @Override
     @Deprecated
-    public boolean startAutoCleaner(long EXPIRY_DURATION, long START_TASK_DELAY, long REPEAT_TASK_DELAY, TimeUnit TIME_UNIT) throws SmartCacheException {
-        final long expiry = TimeUnit.NANOSECONDS.convert(EXPIRY_DURATION, TIME_UNIT);
+    public boolean startAutoCleaner(long EXPIRY_DURATION, long START_TASK_DELAY, long REPEAT_TASK_DELAY, TimeUnit TIME_UNIT, Object CALLBACK_CLASS_OBJECT, Method CALLBACK_METHOD) throws SmartCacheException {
+        return false;
+    }
 
-        if (autoCleanerService == null) {
-            autoCleanerService = autoCleanerExecutor.newSingleThreadScheduledExecutor();
-        } else {
-            throw new SmartCacheException("Auto Cleaner for this Cache has already been started!");
-        }
-        try {
-            autoCleanerService.scheduleAtFixedRate(new Runnable() {
-                @Override
-                public void run() {
-                    for (K key : keySet()) {
-                        if ((System.nanoTime() - get(key).getTIME_STAMP()) >= expiry) {
-                            // Increment the deletedEntriesCounter
-                            deletedEntriesCounter.incrementAndGet();
-                            // Delete and Provide Callback if needed
-                            remove(key, EXPIRED);
-                        }
-                    }
-                }
-            }, START_TASK_DELAY, REPEAT_TASK_DELAY, TIME_UNIT);
-            return true;
-        } catch (Exception e) {
-            throw new SmartCacheException("Smart Cache can not start the auto cleaner service due to: " + e.getMessage(), e);
+    /**
+     * Start auto cleaner.
+     * This method starts the auto cleaner service and deletes the entries which has been timed out.
+     * It is HIGHLY RECOMMENDED to use either this {@link com.sohail.alam.mango_pi.smart.cache.SmartCache#startAutoCleaner(com.sohail.alam.mango_pi.smart.cache.SmartCacheEventListener)} method,
+     * or the {@link com.sohail.alam.mango_pi.smart.cache.SmartCache#startAutoCleaner()} method for the cleanup process.
+     *
+     * @param smartCacheEventListener the smart cache event listener
+     */
+    @Override
+    public void startAutoCleaner(SmartCacheEventListener smartCacheEventListener) {
+        this.startAutoCleaner = true;
+        this.smartCacheEventListener = smartCacheEventListener;
+
+        // If any Cache entries were put into the Cache before the timer was started then
+        // start the timer for them too
+        if (!NON_SCHEDULED_TASKS.isEmpty()) {
+            ConcurrentHashMap<String, Object> temp;
+            Integer ttl;
+            TimeUnit timeUnit;
+            Long putTime;
+            long expiry;
+            for (K key : NON_SCHEDULED_TASKS.keySet()) {
+                temp = NON_SCHEDULED_TASKS.get(key);
+                ttl = (Integer) temp.get("TTL");
+                timeUnit = (TimeUnit) temp.get("TIME_UNIT");
+                putTime = (Long) temp.get("CURRENT_NANO");
+                expiry = System.nanoTime() - (TimeUnit.NANOSECONDS.convert(putTime, timeUnit));
+                if (expiry > 0)
+                    TASK_HOLDER.put(key, TASK_EXECUTOR.schedule(new AutoCleanerTask(key), ttl, timeUnit));
+                else
+                    remove(key, EXPIRED);
+            }
         }
     }
 
     /**
-     * Stops the ongoing Auto Cleaner Service
-     * This method has been deprecated. It is HIGHLY RECOMMENDED to use the,
-     * {@link SmartCache#stopAllAutoCleaner(boolean)} ()} or
-     * the {@link SmartCache#stopAutoCleaner(Object, boolean)} methods.
+     * Start auto cleaner.
+     * This method starts the auto cleaner service and deletes the entries which has been timed out.
+     * It is HIGHLY RECOMMENDED to use either the {@link com.sohail.alam.mango_pi.smart.cache.SmartCache#startAutoCleaner(com.sohail.alam.mango_pi.smart.cache.SmartCacheEventListener)} method,
+     * or this {@link com.sohail.alam.mango_pi.smart.cache.SmartCache#startAutoCleaner()} method for the cleanup process.
      */
     @Override
-    @Deprecated
-    public void stopAutoCleaner() throws SecurityException {
-        if (autoCleanerService != null)
-            autoCleanerService.shutdown();
-        autoCleanerService = null;
+    public void startAutoCleaner() {
+        startAutoCleaner(null);
+    }
+
+    /**
+     * Stops the ongoing Auto Cleaner Service for the Cache data corresponding to a specific key.
+     * This only works if you the Cache entries were made using the methods:
+     * {@link SmartCache#put(Object, Object, int)} and
+     * {@link SmartCache#put(Object, Object, int, java.util.concurrent.TimeUnit)} methods.
+     * Also, the autoCleaner for this purpose must have been initiated using the one of the following methods:
+     * {@link com.sohail.alam.mango_pi.smart.cache.SmartCache#startAutoCleaner()} or
+     * {@link com.sohail.alam.mango_pi.smart.cache.SmartCache#startAutoCleaner(com.sohail.alam.mango_pi.smart.cache.SmartCacheEventListener)}.
+     *
+     * @param key         the key
+     * @param removeEntry if <code>true</code> then the entry corresponding to this key is removed
+     *                    from the Cache after stopping its cleanup task.
+     */
+    @Override
+    public void stopAutoCleaner(K key, boolean removeEntry) {
+        TASK_HOLDER.get(key).cancel(true);
+
+        if (removeEntry)
+            remove(key, EXPIRED);
+
+        if (canceledTasks.getAndIncrement() >= 100) {
+            TASK_EXECUTOR.purge();
+            canceledTasks.set(0);
+        }
+    }
+
+    /**
+     * Stops the ongoing Auto Cleaner Service for the Cache data corresponding to all keys.
+     * This only works if you the Cache entries were made using the methods:
+     * {@link SmartCache#put(Object, Object, int)} and
+     * {@link SmartCache#put(Object, Object, int, java.util.concurrent.TimeUnit)} methods.
+     * Also, the autoCleaner for this purpose must have been initiated using the one of the following methods:
+     * {@link com.sohail.alam.mango_pi.smart.cache.SmartCache#startAutoCleaner()} or
+     * {@link com.sohail.alam.mango_pi.smart.cache.SmartCache#startAutoCleaner(com.sohail.alam.mango_pi.smart.cache.SmartCacheEventListener)}.
+     *
+     * @param removeEntry if <code>true</code> then the entry corresponding to this key is removed
+     *                    from the Cache after stopping its cleanup task.
+     */
+    @Override
+    public void stopAllAutoCleaner(boolean removeEntry) {
+        Set<K> keySet = TASK_HOLDER.keySet();
+        for (K key : keySet) {
+            TASK_HOLDER.get(key).cancel(true);
+            if (removeEntry)
+                remove(key, EXPIRED);
+        }
+        TASK_EXECUTOR.purge();
+    }
+
+    /**
+     * Purges only the data corresponding to the given KEY.
+     * Invoking this method will give a callback to the
+     * {@link com.sohail.alam.mango_pi.smart.cache.SmartCacheEventListener#onSingleEntryPurge(Object, Object)}.
+     *
+     * @param key the KEY
+     *
+     * @return the <code>true</code> if everything goes fine else <code>false</code>.
+     */
+    @Override
+    public boolean purgeCacheEntry(K key) {
+        return PURGE_EXECUTOR.submit(new CachePurger(key)).isDone();
+    }
+
+    /**
+     * Purges only the data corresponding to the given set of KEYs.
+     * Invoking this method will give a callback to the
+     * {@link com.sohail.alam.mango_pi.smart.cache.SmartCacheEventListener#onCachePurge(java.util.Map)}.
+     *
+     * @param keys the keys
+     *
+     * @return the boolean
+     */
+    @Override
+    public boolean purgeCacheEntries(Set<K> keys) {
+        return PURGE_EXECUTOR.submit(new CachePurger(keys)).isDone();
+    }
+
+    /**
+     * Purge the entire cache for backup purpose. Invoking this method will give a
+     * callback to {@link com.sohail.alam.mango_pi.smart.cache.SmartCacheEventListener#onCachePurge(java.util.Map)}.
+     *
+     * @return the <code>true</code> if everything goes fine else <code>false</code>.
+     */
+    @Override
+    public boolean purgeAllCacheEntries() {
+        return purgeCacheEntries(keySet());
+    }
+
+    /**
+     * Get the unique name for this Smart Cache Instance
+     *
+     * @return The unique name for this Smart Cache Instance
+     */
+    public String getCacheName() {
+        return cacheName;
+    }
+
+    /**
+     * Get the total size of the data stored in Smart Cache
+     *
+     * @return The total size of the Smart Cache
+     */
+    public long getTotalCacheSize() {
+        return totalCacheSize.get();
+    }
+
+    /**
+     * Increment the total size of the data stored in Smart Cache by the given amount
+     *
+     * @return The total size of the Smart Cache after increment
+     */
+    public long incrementTotalCacheSize(long size) {
+        return totalCacheSize.addAndGet(size);
+    }
+
+    /**
+     * Decrement the total size of the data stored in Smart Cache by the given amount
+     *
+     * @return The total size of the Smart Cache after decrement
+     */
+    public long decrementTotalCacheSize(long size) {
+        return totalCacheSize.addAndGet(-size);
     }
 
     /**
@@ -231,5 +522,96 @@ public class DefaultSmartCache<K, V extends SmartCachePojo> extends AbstractSmar
      */
     public void resetDeletedEntriesCounter() {
         deletedEntriesCounter = new AtomicLong(0);
+    }
+
+    /**
+     * Nothing to do here!! Only returns <code>false</code>
+     */
+    @Override
+    @Deprecated
+    public boolean startAutoCleaner(long EXPIRY_DURATION, long START_TASK_DELAY,
+                                    long REPEAT_TASK_DELAY, TimeUnit TIME_UNIT)
+            throws SmartCacheException {
+        return false;
+    }
+
+    /**
+     * Nothing to do here!! Only returns <code>false</code>
+     */
+    @Override
+    @Deprecated
+    public boolean startAutoCleaner(long EXPIRY_DURATION, long START_TASK_DELAY,
+                                    long REPEAT_TASK_DELAY, TimeUnit TIME_UNIT,
+                                    SmartCacheEventListener smartCacheEventListener)
+            throws SmartCacheException {
+        return false;
+    }
+
+    /**
+     * Nothing to do here!!
+     */
+    @Override
+    @Deprecated
+    public void stopAutoCleaner() {
+
+    }
+
+    /**
+     * Class responsible for purging the cache entries
+     */
+    private final class CachePurger implements Runnable {
+
+        private Set<K> keys = keySet();
+
+        /**
+         * Instantiates a new Purger class.
+         *
+         * @param keys the keys
+         */
+        public CachePurger(Set<K> keys) {
+            this.keys = keys;
+        }
+
+        /**
+         * Instantiates a new Purger class.
+         *
+         * @param key the key
+         */
+        public CachePurger(K key) {
+            keys = new HashSet<K>(1);
+            keys.add(key);
+        }
+
+        @Override
+        public void run() {
+            Map<K, V> cacheEntries = new HashMap<K, V>();
+            if (smartCacheEventListener != null) {
+                for (K key : keys) {
+                    V value = SMART_CACHE_DATA.remove(key);
+                    cacheEntries.put(key, value);
+                    if (value instanceof SmartCachePojo) {
+                        SMART_CACHE_HISTORY.addToHistory(PURGED, key, (SmartCachePojo) value);
+                    }
+                }
+                smartCacheEventListener.onCachePurge(cacheEntries);
+            }
+        }
+    }
+
+    /**
+     * Class responsible for the clean up operations
+     */
+    private final class AutoCleanerTask implements Callable<V> {
+
+        private K key;
+
+        AutoCleanerTask(K key) {
+            this.key = key;
+        }
+
+        @Override
+        public V call() throws Exception {
+            return remove(key, EXPIRED);
+        }
     }
 }

@@ -19,13 +19,13 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 class SmartCacheHistoryImpl<K, V extends SmartCachePojo> implements SmartCacheHistory<K, V> {
 
-    protected static final SmartCacheHistory HISTORY = new SmartCacheHistoryImpl();
-    private final ConcurrentHashMap<K, SmartCacheHistoryPojo> SMART_CACHE_HISTORY;
+    protected static final SmartCacheHistory SMART_CACHE_HISTORY = new SmartCacheHistoryImpl();
+    private final ConcurrentHashMap<K, SmartCacheHistoryPojo> HISTORY;
     private final ExecutorService HISTORY_EXECUTOR = Executors.newSingleThreadExecutor();
     private AtomicLong maxElementCount = new AtomicLong(1000);
 
     private SmartCacheHistoryImpl() {
-        SMART_CACHE_HISTORY = new ConcurrentHashMap<K, SmartCacheHistoryPojo>();
+        HISTORY = new ConcurrentHashMap<K, SmartCacheHistoryPojo>();
     }
 
     /**
@@ -37,14 +37,14 @@ class SmartCacheHistoryImpl<K, V extends SmartCachePojo> implements SmartCacheHi
      */
     @Override
     public void addToHistory(String reason, K key, V value) {
-        if (SMART_CACHE_HISTORY.size() >= maxElementCount.get())
+        if (HISTORY.size() >= maxElementCount.get())
             try {
                 purgeHistory(null);
             } catch (Exception e) {
                 e.printStackTrace();
             }
 
-        SMART_CACHE_HISTORY.put(key, new SmartCacheHistoryPojo<K, V>(reason, key, value));
+        HISTORY.put(key, new SmartCacheHistoryPojo<K, V>(reason, key, value));
     }
 
     /**
@@ -72,7 +72,7 @@ class SmartCacheHistoryImpl<K, V extends SmartCachePojo> implements SmartCacheHi
     @Override
     public String viewHistory(K key) {
         StringBuffer buffer = new StringBuffer();
-        SmartCacheHistoryPojo found = SMART_CACHE_HISTORY.get(key);
+        SmartCacheHistoryPojo found = HISTORY.get(key);
         buffer.append("Smart Cache History: ");
         buffer.append("\r\n--------------------------------------------------------" +
                 "---------------------------------------------------------------\r\n");
@@ -113,8 +113,8 @@ class SmartCacheHistoryImpl<K, V extends SmartCachePojo> implements SmartCacheHi
         buffer.append("\r\n--------------------------------------------------------" +
                 "---------------------------------------------------------------\r\n");
 
-        for (K key : SMART_CACHE_HISTORY.keySet()) {
-            if ((foundPojo = SMART_CACHE_HISTORY.get(key)).DELETE_REASON.equals(reason)) {
+        for (K key : HISTORY.keySet()) {
+            if ((foundPojo = HISTORY.get(key)).DELETE_REASON.equals(reason)) {
                 buffer.append(String.format("%-15s", foundPojo.DELETE_REASON));
                 buffer.append(String.format("%-50s", foundPojo.KEY));
                 buffer.append(String.format("%-35s", foundPojo.CREATION_TIME));
@@ -151,8 +151,8 @@ class SmartCacheHistoryImpl<K, V extends SmartCachePojo> implements SmartCacheHi
         buffer.append("\r\n--------------------------------------------------------" +
                 "---------------------------------------------------------------\r\n");
 
-        for (K key : SMART_CACHE_HISTORY.keySet()) {
-            foundPojo = SMART_CACHE_HISTORY.get(key);
+        for (K key : HISTORY.keySet()) {
+            foundPojo = HISTORY.get(key);
             buffer.append(String.format("%-15s", foundPojo.DELETE_REASON));
             buffer.append(String.format("%-50s", foundPojo.KEY));
             buffer.append(String.format("%-35s", foundPojo.CREATION_TIME));

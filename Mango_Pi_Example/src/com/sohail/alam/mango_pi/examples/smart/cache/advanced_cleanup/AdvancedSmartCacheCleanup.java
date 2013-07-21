@@ -3,7 +3,7 @@ package com.sohail.alam.mango_pi.examples.smart.cache.advanced_cleanup;
 import com.sohail.alam.mango_pi.examples.smart.cache.MyCacheListener;
 import com.sohail.alam.mango_pi.examples.smart.cache.SmartCacheData;
 import com.sohail.alam.mango_pi.examples.smart.cache.TestSmartCache;
-import com.sohail.alam.mango_pi.smart.cache.DefaultSmartCache;
+import com.sohail.alam.mango_pi.smart.cache.DeprecatedSmartCache;
 import com.sohail.alam.mango_pi.smart.cache.SmartCacheException;
 
 import java.util.concurrent.TimeUnit;
@@ -25,9 +25,9 @@ public class AdvancedSmartCacheCleanup {
         LOGGER.info("Starting SmartCache Setup with SmartCacheEventListener");
 
         // Instantiate the Smart Cache
-        // (Here we take advantage of the helper class DefaultSmartCache)
-        final DefaultSmartCache<String, SmartCacheData> mySmartCache =
-                new DefaultSmartCache<String, SmartCacheData>("Advanced_Test");
+        // (Here we take advantage of the helper class DeprecatedSmartCache)
+        final DeprecatedSmartCache<String, SmartCacheData> mySmartCache =
+                new DeprecatedSmartCache<String, SmartCacheData>("Advanced_Test");
 
         // Add an Event Listener to the Cache, and Start the auto cleaner service
         mySmartCache.startAutoCleaner(new MyCacheListener());

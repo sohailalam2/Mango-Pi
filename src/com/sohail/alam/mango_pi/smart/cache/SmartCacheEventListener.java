@@ -50,8 +50,12 @@ public interface SmartCacheEventListener<K, V> {
      *
      * @param key          the key
      * @param deletedEntry the entry which was deleted from the Cache
+     * @param reason       the reason for which the cache entry was deleted.
+     *                     This may contain one of the values present in
+     *                     {@link com.sohail.alam.mango_pi.smart.cache.SmartCache.SmartCacheDeleteReason}
+     *                     interface, or any other set by the user.
      */
-    public void onDeleteCacheEntry(K key, V deletedEntry);
+    public void onDeleteCacheEntry(K key, V deletedEntry, String reason);
 
     /**
      * Event for On Single Entry Purge.

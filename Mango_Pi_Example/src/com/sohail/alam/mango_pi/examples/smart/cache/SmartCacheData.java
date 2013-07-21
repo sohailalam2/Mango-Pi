@@ -24,9 +24,9 @@ import com.sohail.alam.mango_pi.smart.cache.SmartCachePojo;
  * Date: 9/6/13
  * Time: 1:18 AM
  */
-public class SmartCacheData extends SmartCachePojo {
+public class SmartCacheData<K> extends SmartCachePojo<K> {
 
-    private String key;
+    private K key;
     private byte[][] data;
 
     public SmartCacheData() {
@@ -34,15 +34,15 @@ public class SmartCacheData extends SmartCachePojo {
     }
 
     public SmartCacheData(String key, byte[][] data) {
-        this.setKey(key);
+        this.setKey((K) key);
         this.setData(data);
     }
 
-    public String getKey() {
+    public K getKey() {
         return key;
     }
 
-    public void setKey(String key) {
+    public void setKey(K key) {
         this.key = key;
     }
 
@@ -52,5 +52,14 @@ public class SmartCacheData extends SmartCachePojo {
 
     public void setData(byte[][] data) {
         this.data = data;
+    }
+
+    @Override
+    public long size() {
+        long size = 0;
+        for (int i = 0; i < data.length; i++) {
+            size += data[i].length;
+        }
+        return size;
     }
 }

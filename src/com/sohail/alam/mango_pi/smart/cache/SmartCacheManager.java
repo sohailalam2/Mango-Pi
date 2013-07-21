@@ -32,10 +32,10 @@ import java.util.concurrent.TimeUnit;
  * Time: 8:27 AM
  */
 @JMXBean(description = "Smart Cache MBean")
-public class SmartCacheManager<T extends AbstractSmartCache, K, V> implements SmartCacheManagerMBean<K> {
+public class SmartCacheManager<T extends DefaultSmartCache, K, V> implements SmartCacheManagerMBean<K> {
 
     private static String MBEAN_NAME;
-    private final SmartCacheHistory HISTORY = SmartCacheHistoryImpl.HISTORY;
+    private final SmartCacheHistory HISTORY = SmartCacheHistoryImpl.SMART_CACHE_HISTORY;
     private SmartCache cache;
 
     /**
@@ -104,6 +104,7 @@ public class SmartCacheManager<T extends AbstractSmartCache, K, V> implements Sm
      * @throws SmartCacheException the smart cache exception
      */
     @Override
+    @Deprecated
     @JMXBeanOperation(name = "startAutoCleanerWithTimeUnit", description = "Start the auto cleaner service for the given Smart Cache (With a callback method, using Smart Cache Event Listener API)")
     public boolean startAutoCleanerWithTimeUnit(@JMXBeanParameter(name = "Expiry Duration", description = "The TTL Value for the Cache elements") final long EXPIRY_DURATION,
                                                 @JMXBeanParameter(name = "Start Task Delay", description = "The delay after which the auto cleaner task starts") final long START_TASK_DELAY,
@@ -126,6 +127,7 @@ public class SmartCacheManager<T extends AbstractSmartCache, K, V> implements Sm
      *          the smart cache exception
      */
     @Override
+    @Deprecated
     @JMXBeanOperation(name = "startAutoCleaner", description = "Start the auto cleaner service for the given Smart Cache (With a callback method, using Smart Cache Event Listener API) [All are in seconds]")
     public boolean startAutoCleaner(@JMXBeanParameter(name = "Expiry Duration", description = "The TTL Value for the Cache elements (in seconds)") final long EXPIRY_DURATION,
                                     @JMXBeanParameter(name = "Start Task Delay", description = "The delay after which the auto cleaner task starts (in seconds)") final long START_TASK_DELAY,
@@ -148,6 +150,7 @@ public class SmartCacheManager<T extends AbstractSmartCache, K, V> implements Sm
      * @throws SmartCacheException the smart cache exception
      */
     @Override
+    @Deprecated
     @JMXBeanOperation(name = "startAutoCleanerReflection", description = "Start the auto cleaner service for the given Smart Cache (With a callback method, using Java Reflection API)")
     public boolean startAutoCleanerReflection(@JMXBeanParameter(name = "Expiry Duration", description = "The TTL Value for the Cache elements") final long EXPIRY_DURATION,
                                               @JMXBeanParameter(name = "Start Task Delay", description = "The delay after which the auto cleaner task starts") final long START_TASK_DELAY,
@@ -163,6 +166,7 @@ public class SmartCacheManager<T extends AbstractSmartCache, K, V> implements Sm
      * Stop auto cleaner.
      */
     @Override
+    @Deprecated
     @JMXBeanOperation(name = "stopAutoCleaner", description = "Stop the auto cleaner service for the given Smart Cache")
     public void stopAutoCleaner() {
         this.cache.stopAutoCleaner();
@@ -181,6 +185,7 @@ public class SmartCacheManager<T extends AbstractSmartCache, K, V> implements Sm
      * @throws SmartCacheException the smart cache exception
      */
     @Override
+    @Deprecated
     @JMXBeanOperation(name = "rescheduleAutoCleanerWithTimeUnit", description = "Restart the auto cleaner service for the given Smart Cache (With a callback method, using Smart Cache Event Listener API)")
     public boolean rescheduleAutoCleanerWithTimeUnit(@JMXBeanParameter(name = "Expiry Duration", description = "The TTL Value for the Cache elements") final long EXPIRY_DURATION,
                                                      @JMXBeanParameter(name = "Start Task Delay", description = "The delay after which the auto cleaner task starts") final long START_TASK_DELAY,
@@ -203,6 +208,7 @@ public class SmartCacheManager<T extends AbstractSmartCache, K, V> implements Sm
      *          the smart cache exception
      */
     @Override
+    @Deprecated
     @JMXBeanOperation(name = "rescheduleAutoCleaner", description = "Restart the auto cleaner service for the given Smart Cache (With a callback method, using Smart Cache Event Listener API)")
     public boolean rescheduleAutoCleaner(@JMXBeanParameter(name = "Expiry Duration", description = "The TTL Value for the Cache elements") final long EXPIRY_DURATION,
                                          @JMXBeanParameter(name = "Start Task Delay", description = "The delay after which the auto cleaner task starts") final long START_TASK_DELAY,
@@ -226,6 +232,7 @@ public class SmartCacheManager<T extends AbstractSmartCache, K, V> implements Sm
      * @throws SmartCacheException the smart cache exception
      */
     @Override
+    @Deprecated
     @JMXBeanOperation(name = "rescheduleAutoCleanerReflection", description = "Restart the auto cleaner service for the given Smart Cache (With a callback method, using Java Reflection API)")
     public boolean rescheduleAutoCleanerReflection(@JMXBeanParameter(name = "Expiry Duration", description = "The TTL Value for the Cache elements") final long EXPIRY_DURATION,
                                                    @JMXBeanParameter(name = "Start Task Delay", description = "The delay after which the auto cleaner task starts") final long START_TASK_DELAY,
@@ -314,7 +321,7 @@ public class SmartCacheManager<T extends AbstractSmartCache, K, V> implements Sm
         for (K key : keySet) {
             V data = (V) cache.get(key);
             if (data instanceof SmartCachePojo) {
-                buffer.append(String.format("%-20s", ((SmartCachePojo) data).getTIME_STAMP()));
+                buffer.append(String.format("%-20s", ((SmartCachePojo) data).getCREATION_TIME()));
             } else {
                 buffer.append(String.format("%-20s", "UNKNOWN"));
             }
@@ -345,7 +352,7 @@ public class SmartCacheManager<T extends AbstractSmartCache, K, V> implements Sm
         // Iterate the SmartCache for all keys
         V data = (V) cache.get(key);
         if (data instanceof SmartCachePojo) {
-            buffer.append(String.format("%-20s", ((SmartCachePojo) data).getTIME_STAMP()));
+            buffer.append(String.format("%-20s", ((SmartCachePojo) data).getCREATION_TIME()));
         } else {
             buffer.append(String.format("%-20s", "UNKNOWN"));
         }
@@ -375,7 +382,7 @@ public class SmartCacheManager<T extends AbstractSmartCache, K, V> implements Sm
         for (K key : keys) {
             V data = (V) cache.get(key);
             if (data instanceof SmartCachePojo) {
-                buffer.append(String.format("%-20s", ((SmartCachePojo) data).getTIME_STAMP()));
+                buffer.append(String.format("%-20s", ((SmartCachePojo) data).getCREATION_TIME()));
             } else {
                 buffer.append(String.format("%-20s", "UNKNOWN"));
             }
@@ -394,7 +401,7 @@ public class SmartCacheManager<T extends AbstractSmartCache, K, V> implements Sm
     @Override
     @JMXBeanOperation(name = "purgeAllCacheEntries", description = "Purges the entire cache")
     public boolean purgeAllCacheEntries() {
-        return cache.purgeCacheEntries();
+        return cache.purgeAllCacheEntries();
     }
 
     /**
@@ -405,7 +412,7 @@ public class SmartCacheManager<T extends AbstractSmartCache, K, V> implements Sm
      * @return the boolean
      */
     @Override
-    @JMXBeanOperation(name = "purgeCacheEntry", description = "Purges only the data corresponding to the given KEY")
+    @JMXBeanOperation(name = "purgeAllCacheEntries", description = "Purges only the data corresponding to the given KEY")
     public boolean purgeCacheEntry(@JMXBeanParameter(name = "The Key", description = "The Key for the Cache element") K key) {
         return cache.purgeCacheEntry(key);
     }
@@ -418,9 +425,9 @@ public class SmartCacheManager<T extends AbstractSmartCache, K, V> implements Sm
      * @return the boolean
      */
     @Override
-    @JMXBeanOperation(name = "purgeCacheEntries", description = "Purges only the data corresponding to the given KEY")
+    @JMXBeanOperation(name = "purgeAllCacheEntries", description = "Purges only the data corresponding to the given KEY")
     public boolean purgeCacheEntries(@JMXBeanParameter(name = "The Set of Keys", description = "The set of Keys for the Cache elements") Set<K> keys) {
-        return cache.purgeCacheEntry(keys);
+        return cache.purgeCacheEntries(keys);
     }
 
     /**
@@ -493,12 +500,12 @@ public class SmartCacheManager<T extends AbstractSmartCache, K, V> implements Sm
      * @throws SmartCacheMBeanException the smart cache m bean exception
      */
     @Override
-    @JMXBeanOperation(name = "getDeletedEntriesCounter", description = "Gets the total number of entries deleted for this Smart Cache (available only if the cache is created using DefaultSmartCache)")
+    @JMXBeanOperation(name = "getDeletedEntriesCounter", description = "Gets the total number of entries deleted for this Smart Cache (available only if the cache is created using DeprecatedSmartCache)")
     public long getDeletedEntriesCounter() throws SmartCacheMBeanException {
-        if (cache instanceof DefaultSmartCache) {
-            return ((DefaultSmartCache) cache).getDeletedEntriesCounter();
+        if (cache instanceof DeprecatedSmartCache) {
+            return ((DeprecatedSmartCache) cache).getDeletedEntriesCounter();
         } else {
-            throw new SmartCacheMBeanException("Given Cache is not an instance of DefaultSmartCache");
+            throw new SmartCacheMBeanException("Given Cache is not an instance of DeprecatedSmartCache");
         }
     }
 
@@ -508,12 +515,12 @@ public class SmartCacheManager<T extends AbstractSmartCache, K, V> implements Sm
      * @throws SmartCacheMBeanException the smart cache m bean exception
      */
     @Override
-    @JMXBeanOperation(name = "resetDeletedEntriesCounter", description = "Resets the total number of entries deleted for this Smart Cache to zero (available only if the cache is created using DefaultSmartCache)")
+    @JMXBeanOperation(name = "resetDeletedEntriesCounter", description = "Resets the total number of entries deleted for this Smart Cache to zero (available only if the cache is created using DeprecatedSmartCache)")
     public void resetDeletedEntriesCounter() throws SmartCacheMBeanException {
-        if (cache instanceof DefaultSmartCache) {
-            ((DefaultSmartCache) cache).resetDeletedEntriesCounter();
+        if (cache instanceof DeprecatedSmartCache) {
+            ((DeprecatedSmartCache) cache).resetDeletedEntriesCounter();
         } else {
-            throw new SmartCacheMBeanException("Given Cache is not an instance of DefaultSmartCache");
+            throw new SmartCacheMBeanException("Given Cache is not an instance of DeprecatedSmartCache");
         }
     }
 }

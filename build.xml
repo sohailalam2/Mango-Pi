@@ -33,6 +33,8 @@
         <mkdir dir="${basedir}/javadoc/SmartCache"/>
         <mkdir dir="${basedir}/javadoc/Utils"/>
         <mkdir dir="${basedir}/javadoc/Validator"/>
+        <copydir src="${basedir}/license/" dest="${basedir}/dist/Mango_Pi/license/"/>
+        <copyfile src="${basedir}/LICENSE.txt" dest="${basedir}/dist/Mango_Pi/LICENSE.txt"/>
     </target>
 
     <!-- CREATE THE JAVADOC FOR THE MANGO-PI PROJECT -->

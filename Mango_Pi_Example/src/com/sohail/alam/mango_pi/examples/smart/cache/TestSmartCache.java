@@ -17,7 +17,7 @@
 package com.sohail.alam.mango_pi.examples.smart.cache;
 
 
-import com.sohail.alam.mango_pi.smart.cache.DefaultSmartCache;
+import com.sohail.alam.mango_pi.smart.cache.DeprecatedSmartCache;
 import com.sohail.alam.mango_pi.smart.cache.SmartCachePojo;
 
 import java.lang.reflect.Method;
@@ -76,7 +76,7 @@ public class TestSmartCache {
      * @param data The deleted entry from the Smart Cache
      */
     public void callback(SmartCachePojo data) {
-        LOGGER.info("Deleted Data which was created at: " + data.getTIME_STAMP());
+        LOGGER.info("Deleted Data which was created at: " + data.getCREATION_TIME());
     }
 
     private void testWithListener() throws Exception {
@@ -84,14 +84,14 @@ public class TestSmartCache {
         LOGGER.info("Starting SmartCache Setup with SmartCacheEventListener");
 
         // Instantiate the Smart Cache
-        // (Here we take advantage of the helper class DefaultSmartCache)
-        final DefaultSmartCache<String, SmartCacheData> mySmartCache =
-                new DefaultSmartCache<String, SmartCacheData>("Test");
+        // (Here we take advantage of the helper class DeprecatedSmartCache)
+        final DeprecatedSmartCache<String, SmartCacheData> mySmartCache =
+                new DeprecatedSmartCache<String, SmartCacheData>("Test");
 
         // This is just for testing the MBeans and Uniqueness of SmartCache names
         // It will throw Exception if the names are same.
-        // final DefaultSmartCache<String, SmartCacheData> mySmartCache2 =
-        //         new DefaultSmartCache<String, SmartCacheData>("Test");
+        // final DeprecatedSmartCache<String, SmartCacheData> mySmartCache2 =
+        //         new DeprecatedSmartCache<String, SmartCacheData>("Test");
 
         // Add an Event Listener to the Cache
         mySmartCache.addSmartCacheEventsListener(new MyCacheListener());
@@ -111,9 +111,9 @@ public class TestSmartCache {
         LOGGER.info("Starting SmartCache Setup with Reflection Callback");
 
         // Instantiate the Smart Cache
-        // (Here we take advantage of the helper class DefaultSmartCache)
-        final DefaultSmartCache<String, SmartCacheData> mySmartCache =
-                new DefaultSmartCache<String, SmartCacheData>("Test1");
+        // (Here we take advantage of the helper class DeprecatedSmartCache)
+        final DeprecatedSmartCache<String, SmartCacheData> mySmartCache =
+                new DeprecatedSmartCache<String, SmartCacheData>("Test1");
 
         // The Callback method which will be invoked by the Smart Cache when deleting an entry from the Cache
         Method method = null;
