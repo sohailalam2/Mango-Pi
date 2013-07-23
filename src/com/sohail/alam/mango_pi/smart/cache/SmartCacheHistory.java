@@ -34,7 +34,7 @@ public interface SmartCacheHistory<K, V extends SmartCachePojo> {
      *
      * @return the string
      */
-    public String viewHistory(K key);
+    public String smartCacheKeyHistory(K key);
 
     /**
      * View history.
@@ -43,14 +43,14 @@ public interface SmartCacheHistory<K, V extends SmartCachePojo> {
      *
      * @return the string
      */
-    public String viewHistoryForReason(String reason);
+    public String smartCacheReasonHistory(String reason);
 
     /**
      * View history.
      *
      * @return the string
      */
-    public String viewAllHistory();
+    public String smartCacheAllHistory();
 
     /**
      * Set the maximum number of entries after which the History is
@@ -58,7 +58,7 @@ public interface SmartCacheHistory<K, V extends SmartCachePojo> {
      *
      * @param maxElementCount the max element count
      */
-    public void autoDeleteHistory(int maxElementCount);
+    public void maxHistoryCount(int maxElementCount);
 
     /**
      * Purges the contents of History into a user defined file.
@@ -67,5 +67,5 @@ public interface SmartCacheHistory<K, V extends SmartCachePojo> {
      *
      * @param filePath the absolute file path for the dump file.
      */
-    public void purgeHistory(String filePath) throws Exception;
+    public String purgeSmartCacheHistory(String filePath) throws Exception;
 }

@@ -74,9 +74,9 @@ public abstract class SmartCachePojo<K> {
 
     /**
      * This abstract method MUST be defined in your implementation, and
-     * it SHOULD return the total size of the data entry that is stored in the Cache.
+     * it SHOULD return the total numberOfEntries of the data entry that is stored in the Cache.
      *
-     * @return the total size of the data stored
+     * @return the total numberOfEntries of the data stored
      */
     public abstract long size();
 

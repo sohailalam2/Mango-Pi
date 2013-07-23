@@ -21,7 +21,6 @@ import com.sohail.alam.mango_pi.smart.cache.SmartCachePojo;
 
 import java.util.Date;
 import java.util.Map;
-import java.util.logging.Logger;
 
 /**
  * User: Sohail Alam
@@ -31,10 +30,8 @@ import java.util.logging.Logger;
  */
 public class MyCacheListener<K, V extends SmartCachePojo> implements SmartCacheEventListener<K, V> {
 
-    private final Logger LOGGER = Logger.getLogger(MyCacheListener.class.getName());
-
     public MyCacheListener() {
-        LOGGER.info("Added SmartCacheEventListener");
+        System.out.println("Added SmartCacheEventListener");
     }
 
     /**
@@ -47,7 +44,7 @@ public class MyCacheListener<K, V extends SmartCachePojo> implements SmartCacheE
      */
     @Override
     public void onCreateCacheEntry(Object key, SmartCachePojo createdEntry) {
-        LOGGER.info("Cache Entry was CREATED => Key: " + key + " Time: " + new Date(createdEntry.getCREATION_TIME()));
+//        System.out.println("Cache Entry was CREATED => Key: " + key + " Time: " + new Date(createdEntry.getCREATION_TIME()));
     }
 
     /**
@@ -64,7 +61,7 @@ public class MyCacheListener<K, V extends SmartCachePojo> implements SmartCacheE
      */
     @Override
     public void onDeleteCacheEntry(K key, V deletedEntry, String reason) {
-        LOGGER.info("Cache Entry was DELETED due to Reason: " + reason + " => Key: " + key
+        System.err.println("Cache Entry was DELETED due to Reason: " + reason + " => Key: " + key
                 + " Creation Time: " + new Date(deletedEntry.getCREATION_TIME())
                 + " Deletion Time: " + new Date(System.currentTimeMillis()));
     }
@@ -79,7 +76,7 @@ public class MyCacheListener<K, V extends SmartCachePojo> implements SmartCacheE
      */
     @Override
     public void onSingleEntryPurge(Object key, SmartCachePojo purgedElement) {
-        LOGGER.info("Cache Entry was PURGED => Key: " + key + " Time: " + purgedElement.getCREATION_TIME());
+        System.err.println("Cache Entry was PURGED => Key: " + key + " Time: " + purgedElement.getCREATION_TIME());
     }
 
     /**
@@ -91,6 +88,6 @@ public class MyCacheListener<K, V extends SmartCachePojo> implements SmartCacheE
      */
     @Override
     public void onCachePurge(Map cacheList) {
-        LOGGER.info("Cache was PURGED : \n" + cacheList);
+        System.err.println("Cache was PURGED : \n" + cacheList);
     }
 }

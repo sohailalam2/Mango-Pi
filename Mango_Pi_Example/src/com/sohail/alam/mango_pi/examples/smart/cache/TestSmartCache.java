@@ -17,12 +17,12 @@
 package com.sohail.alam.mango_pi.examples.smart.cache;
 
 
+import com.sohail.alam.mango_pi.smart.cache.DefaultSmartCache;
 import com.sohail.alam.mango_pi.smart.cache.DeprecatedSmartCache;
 import com.sohail.alam.mango_pi.smart.cache.SmartCachePojo;
 
 import java.lang.reflect.Method;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
 
 /**
  * User: Sohail Alam
@@ -32,16 +32,15 @@ import java.util.logging.Logger;
  */
 public class TestSmartCache {
 
-    private final Logger LOGGER = Logger.getLogger(TestSmartCache.class.getName());
     private final int NUMBER_OF_CHUNKS = 10;  // The number of chunks of binary data
-    private final int CHUNK_SIZE = 1 * 1024 * 1024; // The size of each chunk in bytes
+    private final int CHUNK_SIZE = 1 * 1024; // The numberOfEntries of each chunk in bytes
 
     /**
      * Constructor
      */
     public TestSmartCache() throws Exception {
 
-        LOGGER.info("Started with Test Smart Cache");
+        System.out.println("Started with Test Smart Cache");
 
         testWithListener();
 
@@ -52,7 +51,7 @@ public class TestSmartCache {
      * Private method to create binary data
      *
      * @param NUMBER_OF_CHUNKS The number of Chunks of the binary data
-     * @param CHUNK_SIZE       The size of each chunk in bytes
+     * @param CHUNK_SIZE       The numberOfEntries of each chunk in bytes
      *
      * @return a byte[][] containing the binary data
      */
@@ -76,39 +75,37 @@ public class TestSmartCache {
      * @param data The deleted entry from the Smart Cache
      */
     public void callback(SmartCachePojo data) {
-        LOGGER.info("Deleted Data which was created at: " + data.getCREATION_TIME());
+        System.err.println("Deleted Data which was created at: " + data.getCREATION_TIME());
     }
 
     private void testWithListener() throws Exception {
 
-        LOGGER.info("Starting SmartCache Setup with SmartCacheEventListener");
+        System.out.println("Starting SmartCache Setup with SmartCacheEventListener");
 
         // Instantiate the Smart Cache
         // (Here we take advantage of the helper class DeprecatedSmartCache)
-        final DeprecatedSmartCache<String, SmartCacheData> mySmartCache =
-                new DeprecatedSmartCache<String, SmartCacheData>("Test");
+        final DefaultSmartCache<String, SmartCacheData> mySmartCache =
+                new DefaultSmartCache<String, SmartCacheData>("Test", true);
 
         // This is just for testing the MBeans and Uniqueness of SmartCache names
         // It will throw Exception if the names are same.
         // final DeprecatedSmartCache<String, SmartCacheData> mySmartCache2 =
-        //         new DeprecatedSmartCache<String, SmartCacheData>("Test");
+        //          new DeprecatedSmartCache<String, SmartCacheData>("Test");
 
-        // Add an Event Listener to the Cache
+        // Add an Event Listener to the Cache and Start the auto cleaner service
         mySmartCache.addSmartCacheEventsListener(new MyCacheListener());
-
-        // Start the auto cleaner service
-        mySmartCache.startAutoCleaner(2, 0, 1, TimeUnit.SECONDS);
+//        mySmartCache.startAllAutoCleaner();
 
         // Finally put the data into the Smart Cache
         for (int i = 0; i < 1000; i++) {
-            mySmartCache.put("key" + i, new SmartCacheData("DATA" + i, createData(NUMBER_OF_CHUNKS, CHUNK_SIZE)));
+            mySmartCache.put("key" + i, new SmartCacheData("DATA" + i, createData(NUMBER_OF_CHUNKS, CHUNK_SIZE)), (i));
             Thread.sleep(100);
         }
     }
 
     private void testWithReflection() throws Exception {
 
-        LOGGER.info("Starting SmartCache Setup with Reflection Callback");
+        System.out.println("Starting SmartCache Setup with Reflection Callback");
 
         // Instantiate the Smart Cache
         // (Here we take advantage of the helper class DeprecatedSmartCache)

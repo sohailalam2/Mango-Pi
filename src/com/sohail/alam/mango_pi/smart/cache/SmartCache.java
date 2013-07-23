@@ -16,10 +16,10 @@
 
 package com.sohail.alam.mango_pi.smart.cache;
 
-import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -36,112 +36,143 @@ import java.util.concurrent.TimeUnit;
 public interface SmartCache<K, V> {
 
     /**
-     * Checks whether the specified key is associated with any value in the {@link SmartCache}
+     * Checks whether the specified key is associated with any value in the
+     * {@link com.sohail.alam.mango_pi.smart.cache.SmartCache}
      *
-     * @param key The Key of type
+     * @param key The Key of type {@link K}
      *
-     * @return if present, otherwise
+     * @return {@code true} if present, otherwise {@code false}
      */
     boolean containsKey(K key);
 
     /**
-     * Checks whether the specified value is associated with any key in the {@link SmartCache}
+     * Checks whether the specified value is associated with any key in the
+     * {@link com.sohail.alam.mango_pi.smart.cache.SmartCache}
      *
-     * @param value The Key of type
+     * @param value The Key of type {@link V}
      *
-     * @return if present, otherwise
+     * @return {@code true} if present, otherwise {@code false}
      */
     boolean containsValue(V value);
 
     /**
-     * Checks whether the {@link SmartCache} is empty.
+     * Checks whether the {@link com.sohail.alam.mango_pi.smart.cache.SmartCache} is empty.
      *
-     * @return if empty, otherwise
+     * @return {@code true} if empty, {@code false} otherwise
      */
     boolean isEmpty();
 
     /**
-     * Put the Data of type {@link V} into the {@link SmartCache}, corresponding to the Key of type {@link K}
+     * Put the Data of type {@link V} into the
+     * {@link com.sohail.alam.mango_pi.smart.cache.SmartCache},
+     * corresponding to the Key of type {@link K}.
      * <p/>
-     * <strong>NOTE:</strong>
-     * This method has been deprecated and it is HIGHLY RECOMMENDED to use {@link SmartCache#put(Object, Object, int)}
-     * method to insert entries into the Cache with its own TTL value which can be different for
-     * different entries. This can be used with the {@link SmartCache#startAutoCleaner()},
-     * or {@link SmartCache#startAutoCleaner(SmartCacheEventListener)} method to delete the specific entry corresponding to its TTL value.
+     * A TTL Value is associated with the cache entry and it is automatically deleted from the
+     * Cache if the entry out lives its duration.
+     * This can be prevented and the entry can live forever (until the user manually deletes it),
+     * by setting the TTL value to -1.
+     * <p/>
+     * For the entries to be auto deleted the Smart Cache Auto Cleaner Service must be kept alive.
+     * By default it is on.
+     * <p/>
+     * If the Auto Cleaner Service is not alive, then the entries will be deleted
+     * (if and when it outlives) when the Auto Cleaner Service is started.
+     * <p/>
+     * If a {@link SmartCacheEventListener} is attached to this {@link SmartCache} instance,
+     * then an appropriate callback is received in the method
+     * {@link SmartCacheEventListener#onCreateCacheEntry(Object, Object)}.
      *
-     * @param key  Any Key of type
-     * @param data Any Data of type
-     */
-    @Deprecated
-    void put(K key, V data);
-
-    /**
-     * Put the Data of type {@link V} into the {@link SmartCache}, corresponding to the Key of type {@link K}
-     *
-     * @param key      Any Key of type
-     * @param data     Any Data of type
+     * @param key      Any Key of type {@link K}
+     * @param data     Any Data of type {@link V}
      * @param ttl      the ttl value - The after which data will be auto deleted from the Cache
      * @param timeUnit the time unit for the TTL Value
      */
     void put(K key, V data, int ttl, TimeUnit timeUnit);
 
     /**
-     * Put the Data of type {@link V} into the {@link SmartCache}, corresponding to the Key of type {@link K}
+     * Put the Data of type {@link V} into the
+     * {@link com.sohail.alam.mango_pi.smart.cache.SmartCache},
+     * corresponding to the Key of type {@link K}.
+     * <p/>
+     * A TTL Value is associated with the cache entry and it is automatically deleted from the
+     * Cache if the entry out lives its duration.
+     * This can be prevented and the entry can live forever (until the user manually deletes it),
+     * by setting the TTL value to -1.
+     * <p/>
+     * For the entries to be auto deleted the Smart Cache Auto Cleaner Service must be kept alive.
+     * By default it is on.
+     * <p/>
+     * If the Auto Cleaner Service is not alive, then the entries will be deleted
+     * (if and when it outlives) when the Auto Cleaner Service is started.
+     * <p/>
+     * If a {@link SmartCacheEventListener} is attached to this {@link SmartCache} instance,
+     * then an appropriate callback is received in the method
+     * {@link SmartCacheEventListener#onCreateCacheEntry(Object, Object)}.
      *
-     * @param key  Any Key of type
-     * @param data Any Data of type
+     * @param key  Any Key of type {@link K}
+     * @param data Any Data of type {@link V}
      * @param ttl  the ttl value - The after which data will be auto deleted from the Cache
-     *             (By default it takes SECOND as TimeUnit)
+     *             The Time Unit for this TTL Value defaults to Seconds.
      */
     void put(K key, V data, int ttl);
 
     /**
-     * Get the Data corresponding to the given Key from the {@link SmartCache}
+     * Get the Data corresponding to the given Key from the
+     * {@link com.sohail.alam.mango_pi.smart.cache.SmartCache}
      *
-     * @param key The Key of type
+     * @param key The Key of type {@link K}
      *
-     * @return The Data of type
+     * @return The Data of type {@link V}
      */
     V get(K key);
 
     /**
-     * Removes the Data corresponding to the given Key from the {@link SmartCache}
+     * Removes the Data corresponding to the given Key from the
+     * {@link com.sohail.alam.mango_pi.smart.cache.SmartCache}
+     * <p/>
+     * If a {@link SmartCacheEventListener} is attached to this {@link SmartCache} instance,
+     * then an appropriate callback is received in the method
+     * {@link SmartCacheEventListener#onDeleteCacheEntry(Object, Object, String)}.
      *
      * @param key    The Key of type
-     * @param reason the reason
+     * @param reason the reason for which the entry was deleted.
+     *               This can contain any value, but preferably one of the values present in
+     *               {@link SmartCache.SmartCacheDeleteReason}.
      *
      * @return The Data of type that was removed
      */
     V remove(K key, String reason);
 
     /**
-     * Puts an entire Map into the {@link SmartCache}
-     * This method has been deprecated as it does not allow to set individual TTL Values
+     * Gets a copy of the entire Map from the
+     * {@link com.sohail.alam.mango_pi.smart.cache.SmartCache}
      *
-     * @param dataMap Map of type having Key of type and Data of type
+     * @return dataMap Map of type {@link java.util.concurrent.ConcurrentMap}
+     *         having Key of type {@link K} and Data of type {@link V}
      */
-    @Deprecated
-    void putAll(ConcurrentMap<K, V> dataMap);
+    ConcurrentMap<K, V> copy();
 
     /**
-     * Gets an entire Map from the {@link SmartCache}
+     * Removes an entire Map from the
+     * {@link com.sohail.alam.mango_pi.smart.cache.SmartCache} and returns it
+     * <p/>
+     * If a {@link SmartCacheEventListener} is attached to this {@link SmartCache} instance,
+     * then an appropriate callback is received in the method
+     * {@link SmartCacheEventListener#onDeleteCacheEntry(Object, Object, String)}
+     * for <strong>every</strong> entry that is deleted.
+     * <p/>
+     * One could filter the entries on the basis of Deleted Reason.
      *
-     * @return dataMap Map of type having Key of type and Data of type
-     */
-    ConcurrentMap<K, V> getAll();
-
-    /**
-     * Removes an entire Map from the {@link SmartCache} and returns it
-     *
-     * @param reason the reason
-     *
-     * @return dataMap Map of type having Key of type and Data of type
+     * @return dataMap Map of type {@link java.util.concurrent.ConcurrentMap}
+     *         having Key of type {@link K} and Data of type {@link V}
      */
     ConcurrentMap<K, V> removeAll(String reason);
 
     /**
      * Returns a Set view of the keys contained in this map.
-     * The set is backed by the map, so changes to the map are reflected in the set, and vice-versa.
+     * The set is backed by the map, so changes to the map are reflected in the set,
+     * and vice-versa.
+     * <p/>
      * The set supports element removal, which removes the corresponding mapping from this map,
      * via the Iterator.remove, Set.remove, removeAll, retainAll, and clear operations.
      * It does not support the add or addAll operations.
@@ -153,7 +184,9 @@ public interface SmartCache<K, V> {
     /**
      * Returns a Collection view of the values contained in this map.
      * The collection is backed by the map, so changes to the map are reflected in the collection,
-     * and vice-versa. The collection supports element removal,
+     * and vice-versa.
+     * <p/>
+     * The collection supports element removal,
      * which removes the corresponding mapping from this map, via the Iterator.remove,
      * Collection.remove, removeAll, retainAll, and clear operations.
      * It does not support the add or addAll operations.
@@ -168,98 +201,62 @@ public interface SmartCache<K, V> {
      *
      * @return The number of key-value mappings in this map
      */
-    int size();
+    int numberOfEntries();
 
     /**
-     * Sets up an Auto Cleaner Service which will delete entries from the {@link SmartCache} System on expiry of its TTL (time to live)
+     * Starts the Smart Cache Auto Cleaner Service. This method starts the auto cleaner service and
+     * deletes the entries which have been timed out.
      * <p/>
-     * <strong>NOTE:</strong>
-     * This method has been deprecated. It is HIGHLY RECOMMENDED that you use {@link SmartCache#startAutoCleaner()},
-     * or {@link SmartCache#startAutoCleaner(SmartCacheEventListener)} method to delete the specific entry corresponding to its TTL value.
-     *
-     * @param EXPIRY_DURATION       The TTL value after which the entries will be deleted from the Smart Cache
-     * @param START_TASK_DELAY      The initial delay after which this Auto Cleaner service starts
-     * @param REPEAT_TASK_DELAY     The delay after which this Auto Cleaner service repeats itself
-     * @param TIME_UNIT             The Unit of time for the previous parameters
-     * @param CALLBACK_CLASS_OBJECT The Class Object which contains the callback method, if
-     *                              then no callback is made
-     * @param CALLBACK_METHOD       The callback method, if null then no callback is provided.
-     *                              NOTE: The Callback method must accept only one parameter of type
-     *
-     * @return if the Auto Cleaner Service was setup correctly, otherwise returns
-     *
-     * @throws SmartCacheException the smart cache exception
-     */
-    @Deprecated
-    boolean startAutoCleaner(final long EXPIRY_DURATION, final long START_TASK_DELAY, final long REPEAT_TASK_DELAY, final TimeUnit TIME_UNIT,
-                             final Object CALLBACK_CLASS_OBJECT, final Method CALLBACK_METHOD) throws SmartCacheException;
-
-    /**
-     * Sets up an Auto Cleaner Service which will delete entries from the {@link SmartCache} System on expiry of its TTL (time to live)
+     * The Smart Cache Auto Cleaner service is started by default and you need not invoke this
+     * method, unless you at some point stop the Auto Cleaner Service.
      * <p/>
-     * <strong>NOTE:</strong>
-     * This method has been deprecated. It is HIGHLY RECOMMENDED that you use {@link SmartCache#startAutoCleaner()},
-     * or {@link SmartCache#startAutoCleaner(SmartCacheEventListener)} method to delete the specific entry corresponding to its TTL value.
-     *
-     * @param EXPIRY_DURATION   The TTL value after which the entries will be deleted from the Smart Cache
-     * @param START_TASK_DELAY  The initial delay after which this Auto Cleaner service starts
-     * @param REPEAT_TASK_DELAY The delay after which this Auto Cleaner service repeats itself
-     * @param TIME_UNIT         The Unit of time for the previous parameters
-     *
-     * @return if the Auto Cleaner Service was setup correctly, otherwise returns
-     *
-     * @throws SmartCacheException the smart cache exception
-     */
-    @Deprecated
-    boolean startAutoCleaner(final long EXPIRY_DURATION, final long START_TASK_DELAY, final long REPEAT_TASK_DELAY, final TimeUnit TIME_UNIT) throws SmartCacheException;
-
-    /**
-     * Sets up an Auto Cleaner Service which will delete entries from the {@link SmartCache} System on expiry of its TTL (time to live)
+     * This method is needed, if you have stopped the Auto Cleaner Service and have added elements
+     * into the {@link SmartCache} which needs to be removed automatically after a certain duration.
      * <p/>
-     * <strong>NOTE:</strong>
-     * This method has been deprecated. It is HIGHLY RECOMMENDED that you use {@link SmartCache#startAutoCleaner()},
-     * or {@link SmartCache#startAutoCleaner(SmartCacheEventListener)} method to delete the specific entry corresponding to its TTL value.
-     *
-     * @param EXPIRY_DURATION         The TTL value after which the entries will be deleted from the Smart Cache
-     * @param START_TASK_DELAY        The initial delay after which this Auto Cleaner service starts
-     * @param REPEAT_TASK_DELAY       The delay after which this Auto Cleaner service repeats itself
-     * @param TIME_UNIT               The Unit of time for the previous parameters
-     * @param smartCacheEventListener the smart cache event listener
-     *
-     * @return if the Auto Cleaner Service was setup correctly, otherwise returns
-     *
-     * @throws SmartCacheException the smart cache exception
-     */
-    @Deprecated
-    boolean startAutoCleaner(final long EXPIRY_DURATION, final long START_TASK_DELAY, final long REPEAT_TASK_DELAY, final TimeUnit TIME_UNIT, final SmartCacheEventListener smartCacheEventListener) throws SmartCacheException;
-
-    /**
-     * Start auto cleaner.
-     * This method starts the auto cleaner service and deletes the entries which has been timed out.
-     * It is HIGHLY RECOMMENDED to use either this {@link SmartCache#startAutoCleaner(SmartCacheEventListener)} method,
-     * or the {@link SmartCache#startAutoCleaner()} method for the cleanup process.
+     * This method obsoletes those that are found in the {@link DeprecatedSmartCache} class.
+     * It is <Strong>HIGHLY RECOMMENDED</Strong> that you use this method instead of the
+     * deprecated once for new design/implementation.
+     * <p/>
+     * As an added benefit apart from performance gain, you now can store different elements
+     * into the {@link SmartCache} with different TTL value.
+     * <p/>
+     * Optionally with this method you can pass a {@link SmartCacheEventListener} to
+     * receive callbacks on certain events.
      *
      * @param smartCacheEventListener the smart cache event listener
      */
-    void startAutoCleaner(SmartCacheEventListener smartCacheEventListener);
+    void startAllAutoCleaner(SmartCacheEventListener smartCacheEventListener);
 
     /**
-     * Start auto cleaner.
-     * This method starts the auto cleaner service and deletes the entries which has been timed out.
-     * It is HIGHLY RECOMMENDED to use either the {@link SmartCache#startAutoCleaner(SmartCacheEventListener)} method,
-     * or this {@link SmartCache#startAutoCleaner()} method for the cleanup process.
+     * Starts the Smart Cache Auto Cleaner Service. This method starts the auto cleaner service and
+     * deletes the entries which have been timed out.
+     * <p/>
+     * The Smart Cache Auto Cleaner service is started by default and you need not invoke this
+     * method, unless you at some point stop the Auto Cleaner Service.
+     * <p/>
+     * This method is needed, if you have stopped the Auto Cleaner Service and have added elements
+     * into the {@link SmartCache} which needs to be removed automatically after a certain duration.
+     * <p/>
+     * This method obsoletes those that are found in the {@link DeprecatedSmartCache} class.
+     * It is <Strong>HIGHLY RECOMMENDED</Strong> that you use this method instead of the
+     * deprecated once for new design/implementation.
+     * <p/>
+     * As an added benefit apart from performance gain, you now can store different elements
+     * into the {@link SmartCache} with different TTL value.
      */
-    void startAutoCleaner();
-
+    void startAllAutoCleaner();
 
     /**
      * Stops the ongoing Auto Cleaner Service for the Cache data corresponding to a specific key.
-     * This only works if you the Cache entries were made using the methods:
-     * {@link SmartCache#put(Object, Object, int)} and
-     * {@link SmartCache#put(Object, Object, int, java.util.concurrent.TimeUnit)} methods.
-     * Also, the autoCleaner for this purpose must have been initiated using the one of the following methods:
-     * {@link SmartCache#startAutoCleaner()} or
-     * {@link SmartCache#startAutoCleaner(SmartCacheEventListener)}.
+     * This method {@link #stopAutoCleaner(Object, boolean)} obsoletes those that are found in the
+     * {@link DeprecatedSmartCache} class, and only works if the element was put into the {@link SmartCache}
+     * using either of the follwoing methods:
+     * {@link #put(Object, Object, int, java.util.concurrent.TimeUnit)} or
+     * {@link #put(Object, Object, int)}.
+     * <p/>
+     * If removeEntry param is <code>false</code> then the entry is backed up and you can
+     * restart the auto cleaner for this element with the given KEY, using the method
+     * {@link #restartAutoCleaner(Object)}.
      *
      * @param key         the key
      * @param removeEntry if <code>true</code> then the entry corresponding to this key is removed
@@ -268,30 +265,39 @@ public interface SmartCache<K, V> {
     void stopAutoCleaner(K key, boolean removeEntry);
 
     /**
-     * Stops the ongoing Auto Cleaner Service for the Cache data corresponding to all keys.
-     * This only works if you the Cache entries were made using the methods:
-     * {@link SmartCache#put(Object, Object, int)} and
-     * {@link SmartCache#put(Object, Object, int, java.util.concurrent.TimeUnit)} methods.
-     * Also, the autoCleaner for this purpose must have been initiated using the one of the following methods:
-     * {@link SmartCache#startAutoCleaner()} or
-     * {@link SmartCache#startAutoCleaner(SmartCacheEventListener)}.
+     * Stops all the ongoing Auto Cleaner Services.
+     * This method {@link #stopAutoCleaner(Object, boolean)} obsoletes those that are found in the
+     * {@link DeprecatedSmartCache} class, and only works if the element was put into the {@link SmartCache}
+     * using either of the follwoing methods:
+     * {@link #put(Object, Object, int, java.util.concurrent.TimeUnit)} or
+     * {@link #put(Object, Object, int)}.
+     * <p/>
+     * If removeEntry param is <code>false</code> then the entries are backed up and you can
+     * restart the auto cleaner for these element with the given KEY, using the method
+     * {@link #restartAutoCleaner(Object)}.
      *
-     * @param removeEntry if <code>true</code> then the entry corresponding to this key is removed
+     * @param removeEntry if <code>true</code> then the entries are removed
      *                    from the Cache after stopping its cleanup task.
      */
     void stopAllAutoCleaner(boolean removeEntry);
 
     /**
-     * Stops the ongoing Auto Cleaner Service
-     * This method has been deprecated. It is HIGHLY RECOMMENDED to use the,
-     * {@link SmartCache#stopAllAutoCleaner(boolean)} ()} or
-     * the {@link SmartCache#stopAutoCleaner(Object, boolean)} methods.
+     * Starts the Smart Cache Auto Cleaner Service for the entry corresponding to the given KEY.
+     * This method starts the auto cleaner service and deletes the entries which have been timed out.
+     * <p/>
+     * The Smart Cache Auto Cleaner service is started by default and you need not invoke this
+     * method, unless you at some point stop the Auto Cleaner Service.
+     * <p/>
+     *
+     * @param key The KEY for the element in SmartCache for which the Auto Cleaner Service should be started.
      */
-    @Deprecated
-    void stopAutoCleaner();
+    void restartAutoCleaner(K key);
 
     /**
-     * Add smart cache events listener.
+     * Adds a {@link SmartCacheEventListener} or replaces an existing one.
+     * <p/>
+     * If a listener is attached to the {@link SmartCache} instance, then
+     * {@link SmartCache} can provide automatic callbacks on various internal events.
      *
      * @param smartCacheEventListener the smart cache event listener
      */
@@ -303,7 +309,18 @@ public interface SmartCache<K, V> {
      *
      * @return the <code>true</code> if everything goes fine else <code>false</code>.
      */
-    public boolean purgeAllCacheEntries();
+    public boolean purgeAllCacheEntries() throws ExecutionException, InterruptedException;
+
+    /**
+     * Purges only the data corresponding to the given set of KEYs.
+     * Invoking this method will give a callback to the
+     * {@link SmartCacheEventListener#onCachePurge(java.util.Map)}.
+     *
+     * @param keys the keys
+     *
+     * @return the boolean
+     */
+    public boolean purgeCacheEntries(Set<K> keys) throws ExecutionException, InterruptedException;
 
     /**
      * Purges only the data corresponding to the given KEY.
@@ -317,15 +334,38 @@ public interface SmartCache<K, V> {
     public boolean purgeCacheEntry(K key);
 
     /**
-     * Purges only the data corresponding to the given set of KEYs.
-     * Invoking this method will give a callback to the
-     * {@link SmartCacheEventListener#onCachePurge(java.util.Map)}.
+     * Get the total numberOfEntries of the data stored in Smart Cache
+     *
+     * @return The total numberOfEntries of the Smart Cache
+     */
+    public long totalCacheSize();
+
+    /**
+     * Returns a formatted String that holds the information about the Smart Cache
+     * corresponding to the given KEY
+     *
+     * @param key the KEY
+     *
+     * @return Smart Cache Info
+     */
+    public String smartCacheKeyInfo(K key);
+
+    /**
+     * Returns a formatted String that holds the information about the Smart Cache
+     * corresponding to the given set of Keys
      *
      * @param keys the keys
      *
-     * @return the boolean
+     * @return Smart Cache Info
      */
-    public boolean purgeCacheEntries(Set<K> keys);
+    public String smartCacheInfo(Set<K> keys);
+
+    /**
+     * Returns a formatted String that holds the information about the Smart Cache
+     *
+     * @return Smart Cache Info
+     */
+    public String smartCacheFullInfo();
 
     /**
      * The interface containing some of the possible reasons for deleting the Cache entry

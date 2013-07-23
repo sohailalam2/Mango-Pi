@@ -1,4 +1,6 @@
-package com.sohail.alam.mango_pi.smart.cache;
+package com.sohail.alam.mango_pi.smart.cache.mbeans;
+
+import com.sohail.alam.mango_pi.smart.cache.SmartCacheException;
 
 /**
  * User: Sohail Alam

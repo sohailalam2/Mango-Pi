@@ -2,13 +2,9 @@ package com.sohail.alam.mango_pi.smart.cache;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -21,11 +17,14 @@ class SmartCacheHistoryImpl<K, V extends SmartCachePojo> implements SmartCacheHi
 
     protected static final SmartCacheHistory SMART_CACHE_HISTORY = new SmartCacheHistoryImpl();
     private final ConcurrentHashMap<K, SmartCacheHistoryPojo> HISTORY;
-    private final ExecutorService HISTORY_EXECUTOR = Executors.newSingleThreadExecutor();
-    private AtomicLong maxElementCount = new AtomicLong(1000);
+    private final ExecutorService HISTORY_PURGER;
+    private AtomicLong maxHistoryCount;
+    private String filePath;
 
     private SmartCacheHistoryImpl() {
         HISTORY = new ConcurrentHashMap<K, SmartCacheHistoryPojo>();
+        HISTORY_PURGER = Executors.newSingleThreadExecutor();
+        maxHistoryCount = new AtomicLong(1000);
     }
 
     /**
@@ -37,9 +36,9 @@ class SmartCacheHistoryImpl<K, V extends SmartCachePojo> implements SmartCacheHi
      */
     @Override
     public void addToHistory(String reason, K key, V value) {
-        if (HISTORY.size() >= maxElementCount.get())
+        if (HISTORY.size() >= maxHistoryCount.get())
             try {
-                purgeHistory(null);
+                purgeSmartCacheHistory(filePath);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -70,24 +69,29 @@ class SmartCacheHistoryImpl<K, V extends SmartCachePojo> implements SmartCacheHi
      * @return the string
      */
     @Override
-    public String viewHistory(K key) {
-        StringBuffer buffer = new StringBuffer();
+    public String smartCacheKeyHistory(K key) {
+        StringBuilder builder = new StringBuilder();
         SmartCacheHistoryPojo found = HISTORY.get(key);
-        buffer.append("Smart Cache History: ");
-        buffer.append("\r\n--------------------------------------------------------" +
-                "---------------------------------------------------------------\r\n");
-        buffer.append(String.format("%-15s", "REASON"));
-        buffer.append(String.format("%-50s", "KEY"));
-        buffer.append(String.format("%-35s", "CREATION TIME"));
-        buffer.append(String.format("%-35s", "DELETION TIME"));
-        buffer.append("\r\n--------------------------------------------------------" +
-                "---------------------------------------------------------------\r\n");
-        buffer.append(String.format("%-15s", found.DELETE_REASON));
-        buffer.append(String.format("%-50s", found.KEY));
-        buffer.append(String.format("%-35s", found.CREATION_TIME));
-        buffer.append(String.format("%-35s", found.DELETION_TIME));
-        buffer.append("\r\n");
-        return buffer.toString();
+        builder.append("Smart Cache History: ");
+        builder.append(SmartCacheUtils.createLine(175, '-'));
+        builder.append(String.format("%-15s", "REASON"));
+        builder.append(String.format("%-50s", "KEY"));
+        builder.append(String.format("%-20s", "NAME"));
+        builder.append(String.format("%-20s", "SIZE"));
+        builder.append(String.format("%-35s", "CREATION TIME"));
+        builder.append(String.format("%-35s", "DELETION TIME"));
+        builder.append(SmartCacheUtils.createLine(175, '-'));
+
+        builder.append(String.format("%-15s", found.DELETE_REASON));
+        builder.append(String.format("%-50s", found.KEY));
+        builder.append(String.format("%-20s", found.DATA_SIZE));
+        builder.append(String.format("%-20s", found.SMART_CACHE_DATA_NAME));
+        builder.append(String.format("%-35s", found.CREATION_TIME));
+        builder.append(String.format("%-35s", found.DELETION_TIME));
+        builder.append("\r\n");
+
+        builder.append(SmartCacheUtils.createLine(175, '-'));
+        return builder.toString();
     }
 
     /**
@@ -98,37 +102,40 @@ class SmartCacheHistoryImpl<K, V extends SmartCachePojo> implements SmartCacheHi
      * @return the string
      */
     @Override
-    public String viewHistoryForReason(String reason) {
-        StringBuffer buffer = new StringBuffer();
+    public String smartCacheReasonHistory(String reason) {
+        StringBuilder builder = new StringBuilder();
         SmartCacheHistoryPojo foundPojo = null;
         boolean found = false;
 
-        buffer.append("Smart Cache History: ");
-        buffer.append("\r\n--------------------------------------------------------" +
-                "---------------------------------------------------------------\r\n");
-        buffer.append(String.format("%-15s", "REASON"));
-        buffer.append(String.format("%-50s", "KEY"));
-        buffer.append(String.format("%-35s", "CREATION TIME"));
-        buffer.append(String.format("%-35s", "DELETION TIME"));
-        buffer.append("\r\n--------------------------------------------------------" +
-                "---------------------------------------------------------------\r\n");
+        builder.append("Smart Cache History: ");
+        builder.append(SmartCacheUtils.createLine(175, '-'));
+        builder.append(String.format("%-15s", "REASON"));
+        builder.append(String.format("%-50s", "KEY"));
+        builder.append(String.format("%-20s", "NAME"));
+        builder.append(String.format("%-20s", "SIZE"));
+        builder.append(String.format("%-35s", "CREATION TIME"));
+        builder.append(String.format("%-35s", "DELETION TIME"));
+        builder.append(SmartCacheUtils.createLine(175, '-'));
 
         for (K key : HISTORY.keySet()) {
-            if ((foundPojo = HISTORY.get(key)).DELETE_REASON.equals(reason)) {
-                buffer.append(String.format("%-15s", foundPojo.DELETE_REASON));
-                buffer.append(String.format("%-50s", foundPojo.KEY));
-                buffer.append(String.format("%-35s", foundPojo.CREATION_TIME));
-                buffer.append(String.format("%-35s", foundPojo.DELETION_TIME));
-                buffer.append("\r\n");
+            if ((foundPojo = HISTORY.get(key)).DELETE_REASON.equalsIgnoreCase(reason)) {
+                builder.append(String.format("%-15s", foundPojo.DELETE_REASON));
+                builder.append(String.format("%-50s", foundPojo.KEY));
+                builder.append(String.format("%-20s", foundPojo.SMART_CACHE_DATA_NAME));
+                builder.append(String.format("%-20s", foundPojo.DATA_SIZE));
+                builder.append(String.format("%-35s", foundPojo.CREATION_TIME));
+                builder.append(String.format("%-35s", foundPojo.DELETION_TIME));
+                builder.append("\r\n");
                 found = true;
             }
         }
         if (!found) {
-            buffer.append("There are no history corresponding to the reason: " + reason);
-            buffer.append("\r\n");
+            builder.append("There are no history corresponding to the reason: " + reason);
+            builder.append("\r\n");
         }
 
-        return buffer.toString();
+        builder.append(SmartCacheUtils.createLine(175, '-'));
+        return builder.toString();
     }
 
     /**
@@ -137,40 +144,43 @@ class SmartCacheHistoryImpl<K, V extends SmartCachePojo> implements SmartCacheHi
      * @return the string
      */
     @Override
-    public String viewAllHistory() {
-        StringBuffer buffer = new StringBuffer();
+    public String smartCacheAllHistory() {
+        StringBuilder builder = new StringBuilder();
         SmartCacheHistoryPojo foundPojo = null;
 
-        buffer.append("Smart Cache History: ");
-        buffer.append("\r\n--------------------------------------------------------" +
-                "---------------------------------------------------------------\r\n");
-        buffer.append(String.format("%-15s", "REASON"));
-        buffer.append(String.format("%-50s", "KEY"));
-        buffer.append(String.format("%-35s", "CREATION TIME"));
-        buffer.append(String.format("%-35s", "DELETION TIME"));
-        buffer.append("\r\n--------------------------------------------------------" +
-                "---------------------------------------------------------------\r\n");
+        builder.append("Smart Cache History: ");
+        builder.append(SmartCacheUtils.createLine(175, '-'));
+        builder.append(String.format("%-15s", "REASON"));
+        builder.append(String.format("%-50s", "KEY"));
+        builder.append(String.format("%-20s", "NAME"));
+        builder.append(String.format("%-20s", "SIZE"));
+        builder.append(String.format("%-35s", "CREATION TIME"));
+        builder.append(String.format("%-35s", "DELETION TIME"));
+        builder.append(SmartCacheUtils.createLine(175, '-'));
 
         for (K key : HISTORY.keySet()) {
             foundPojo = HISTORY.get(key);
-            buffer.append(String.format("%-15s", foundPojo.DELETE_REASON));
-            buffer.append(String.format("%-50s", foundPojo.KEY));
-            buffer.append(String.format("%-35s", foundPojo.CREATION_TIME));
-            buffer.append(String.format("%-35s", foundPojo.DELETION_TIME));
-            buffer.append("\r\n");
+            builder.append(String.format("%-15s", foundPojo.DELETE_REASON));
+            builder.append(String.format("%-50s", foundPojo.KEY));
+            builder.append(String.format("%-20s", foundPojo.DATA_SIZE));
+            builder.append(String.format("%-20s", foundPojo.SMART_CACHE_DATA_NAME));
+            builder.append(String.format("%-35s", foundPojo.CREATION_TIME));
+            builder.append(String.format("%-35s", foundPojo.DELETION_TIME));
+            builder.append("\r\n");
         }
-        return buffer.toString();
+        builder.append(SmartCacheUtils.createLine(175, '-'));
+        return builder.toString();
     }
 
     /**
      * Set the maximum number of entries after which the History is
      * deleted permanently.
      *
-     * @param maxElementCount the max element count
+     * @param maxHistoryCount the max element count
      */
     @Override
-    public void autoDeleteHistory(int maxElementCount) {
-        this.maxElementCount.set(maxElementCount);
+    public void maxHistoryCount(int maxHistoryCount) {
+        this.maxHistoryCount.set(maxHistoryCount);
     }
 
     /**
@@ -181,51 +191,81 @@ class SmartCacheHistoryImpl<K, V extends SmartCachePojo> implements SmartCacheHi
      * @param filePath the absolute file path for the dump file.
      */
     @Override
-    public void purgeHistory(String filePath) throws Exception {
-        HISTORY_EXECUTOR.execute(new PurgerClass(filePath));
+    public String purgeSmartCacheHistory(String filePath) throws Exception {
+        this.filePath = filePath;
+
+        return HISTORY_PURGER.submit(new HistoryPurgerClass(filePath)).get();
     }
 
-    private final class PurgerClass implements Runnable {
-        String filePath;
+    /**
+     * Gets file path.
+     *
+     * @return the file path
+     */
+    public String getFilePath() {
+        return filePath;
+    }
 
-        public PurgerClass(String filePath) {
-            this.filePath = filePath;
-        }
+    /**
+     * Sets file path.
+     *
+     * @param filePath the file path
+     */
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
+    }
 
-        @Override
-        public void run() {
-            String directory = "/";
-            String fileName = "SmartCacheHistory_" + (new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss")).format(new Date()) + ".txt";
+    /**
+     * Class Responsible for purging the {@link SmartCacheHistory} into a file
+     * for CDR purposes.
+     */
+    private final class HistoryPurgerClass implements Callable<String> {
+        private File file;
 
-            if (filePath.contains("/")) {
-                directory = filePath.substring(0, filePath.lastIndexOf("/") + 1);
-                fileName = filePath.substring(filePath.lastIndexOf("/") + 1);
-            } else if (filePath.contains("\\")) {
-                directory = filePath.substring(0, filePath.lastIndexOf("\\") + 1);
-                fileName = filePath.substring(filePath.lastIndexOf("\\") + 1);
+        /**
+         * Instantiates a new History purger class.
+         *
+         * @param filePath the file path
+         */
+        public HistoryPurgerClass(String filePath) {
+            String directory = "./SMART_CACHE";
+            String fileName = "History_" + (new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss")).format(new Date()) + ".txt";
+
+            if (filePath != null) {
+                if (!filePath.isEmpty()) {
+                    if (filePath.contains("/")) {
+                        directory = filePath.substring(0, filePath.lastIndexOf("/") + 1);
+                        fileName = filePath.substring(filePath.lastIndexOf("/") + 1);
+                    } else if (filePath.contains("\\")) {
+                        directory = filePath.substring(0, filePath.lastIndexOf("\\") + 1);
+                        fileName = filePath.substring(filePath.lastIndexOf("\\") + 1);
+                    } else {
+                        fileName = filePath;
+                    }
+                }
             }
             // Create the directories if not present
             File dir = new File(directory);
             dir.mkdirs();
 
-            // Create the file
-            File file = new File(dir.getAbsoluteFile() + fileName);
-            FileOutputStream fos = null;
-            try {
-                fos = new FileOutputStream(file);
-                fos.write(viewAllHistory().getBytes());
-                fos.flush();
-            } catch (Exception e) {
-                e.printStackTrace();
-            } finally {
-                if (fos != null) {
-                    try {
-                        fos.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
+            file = new File(dir.getAbsoluteFile() + "/" + fileName);
+        }
+
+        /**
+         * Computes a result, or throws an exception if unable to do so.
+         *
+         * @return computed result
+         *
+         * @throws Exception if unable to compute a result
+         */
+        @Override
+        public String call() throws Exception {
+            FileOutputStream fos = new FileOutputStream(file);
+            fos.write(smartCacheAllHistory().getBytes());
+            fos.flush();
+            fos.close();
+            return "Smart Cache History was successfully purged into file => " +
+                    file.getAbsolutePath();
         }
     }
 }

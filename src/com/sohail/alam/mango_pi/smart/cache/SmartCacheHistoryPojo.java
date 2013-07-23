@@ -33,7 +33,7 @@ class SmartCacheHistoryPojo<K, V extends SmartCachePojo> {
     public String SMART_CACHE_DATA_NAME;
 
     /**
-     * This holds tha total size of the data corresponding to the given key
+     * This holds tha total numberOfEntries of the data corresponding to the given key
      */
     public long DATA_SIZE;
 

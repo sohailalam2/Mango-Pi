@@ -16,8 +16,11 @@
 
 package com.sohail.alam.mango_pi.smart.cache;
 
+import com.sohail.alam.mango_pi.smart.cache.mbeans.DeprecatedSmartCacheManager;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -25,28 +28,15 @@ import java.util.concurrent.TimeUnit;
 import static com.sohail.alam.mango_pi.smart.cache.SmartCache.SmartCacheDeleteReason.EXPIRED;
 
 /**
- * <p>
- * this concrete class {@link DeprecatedSmartCache} extends {@link DefaultSmartCache} and
- * implements the {@link SmartCache#startAutoCleaner(long, long, long, java.util.concurrent.TimeUnit)},
- * {@link SmartCache#startAutoCleaner(long, long, long, java.util.concurrent.TimeUnit, Object, java.lang.reflect.Method)},
- * {@link SmartCache#startAutoCleaner(long, long, long, java.util.concurrent.TimeUnit, SmartCacheEventListener)}
- * methods, which checks the TTL value for each elements stored in the {@link SmartCache} and removes it
- * when expired. Also, {@link SmartCache#stopAutoCleaner()} method is
- * provided for you to cancel the Auto Cleaner Service when not needed.
- * </p>
- * <p>
- * But in order for this to work, your Data Structure must implement the {@link SmartCachePojo}, which
- * automatically sets a creation time {@link SmartCachePojo#CREATION_TIME}, which is then checked against the
- * current time and the TTL value that you should have entered while enabling the
- * {@link SmartCache#startAutoCleaner(long, long, long, java.util.concurrent.TimeUnit, Object, java.lang.reflect.Method)}.
- * </p>
  * User: Sohail Alam
  * Version: 1.1.6
  * Date: 9/6/13
  * Time: 12:27 AM
  */
 @Deprecated
-public class DeprecatedSmartCache<K, V extends SmartCachePojo> extends DefaultSmartCache<K, V> {
+public class DeprecatedSmartCache<K, V extends SmartCachePojo>
+        extends DefaultSmartCache<K, V>
+        implements DeprecatedSmartCacheIntf<K, V> {
 
     private Executors autoCleanerExecutor;
     private ScheduledExecutorService autoCleanerService = null;
@@ -61,13 +51,31 @@ public class DeprecatedSmartCache<K, V extends SmartCachePojo> extends DefaultSm
      */
     public DeprecatedSmartCache(String cacheName) throws SmartCacheException {
         super(cacheName, false);
-        new SmartCacheManager<DeprecatedSmartCache, K, V>(this).startSmartCacheMBeanService();
+        new DeprecatedSmartCacheManager<DeprecatedSmartCache, K, V>(this).startSmartCacheMBeanService();
     }
 
+    /**
+     * Put the Data of type {@link V} into the {@link com.sohail.alam.mango_pi.smart.cache.SmartCache}, corresponding to the Key of type {@link K}
+     *
+     * @param key  Any Key of type {@link K}
+     * @param data Any Data of type {@link V}
+     */
     @Override
-    public void addSmartCacheEventsListener(SmartCacheEventListener events) {
-        super.addSmartCacheEventsListener(events);
-        smartCacheEventListener = events;
+    @Deprecated
+    public void put(K key, V data) throws NullPointerException {
+        super.put(key, data, -1);
+    }
+
+    /**
+     * <strong>NOTE</strong>
+     * This method is NOT supported anymore. You can NOT put entire map into the Smart Cache.
+     * <p/>
+     * NOTHING TO DO HERE!!
+     */
+    @Override
+    @Deprecated
+    public void putAll(ConcurrentMap<K, V> dataMap) {
+        // Nothing to do here
     }
 
     /**
@@ -132,8 +140,8 @@ public class DeprecatedSmartCache<K, V extends SmartCachePojo> extends DefaultSm
      * Sets up an Auto Cleaner Service which will delete entries from the {@link SmartCache} System on expiry of its TTL (time to live)
      * <p/>
      * <strong>NOTE:</strong>
-     * This method has been deprecated. It is HIGHLY RECOMMENDED that you use {@link SmartCache#startAutoCleaner()},
-     * or {@link SmartCache#startAutoCleaner(SmartCacheEventListener)} method to delete the specific entry corresponding to its TTL value.
+     * This method has been deprecated. It is HIGHLY RECOMMENDED that you use {@link SmartCache#startAllAutoCleaner()},
+     * or {@link SmartCache#startAllAutoCleaner(SmartCacheEventListener)} method to delete the specific entry corresponding to its TTL value.
      *
      * @param EXPIRY_DURATION         The TTL value after which the entries will be deleted from the Smart Cache
      * @param START_TASK_DELAY        The initial delay after which this Auto Cleaner service starts
@@ -157,8 +165,8 @@ public class DeprecatedSmartCache<K, V extends SmartCachePojo> extends DefaultSm
      * Sets up an Auto Cleaner Service which will delete entries from the {@link SmartCache} System on expiry of its TTL (time to live)
      * <p/>
      * <strong>NOTE:</strong>
-     * This method has been deprecated. It is HIGHLY RECOMMENDED that you use {@link SmartCache#startAutoCleaner()},
-     * or {@link SmartCache#startAutoCleaner(SmartCacheEventListener)} method to delete the specific entry corresponding to its TTL value.
+     * This method has been deprecated. It is HIGHLY RECOMMENDED that you use {@link SmartCache#startAllAutoCleaner()},
+     * or {@link SmartCache#startAllAutoCleaner(SmartCacheEventListener)} method to delete the specific entry corresponding to its TTL value.
      *
      * @param EXPIRY_DURATION   The TTL value after which the entries will be deleted from the Smart Cache
      * @param START_TASK_DELAY  The initial delay after which this Auto Cleaner service starts
